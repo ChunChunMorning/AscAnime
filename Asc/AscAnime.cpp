@@ -63,7 +63,7 @@ void Anime::setFrame(const Array<unsigned>& frame)
 #ifdef _DEBUG
 	if (frame.size() != m_size)
 	{
-		LOG(L"asc::Anime frame‚Ì–‡”‚ªsize‚Æˆê’v‚µ‚Ü‚¹‚ñB");
+		LOG(L"asc::Anime frameã®æšæ•°ãŒsizeã¨ä¸€è‡´ã—ã¾ã›ã‚“ã€‚");
 	}
 #endif
 	m_frame = frame;
@@ -90,7 +90,7 @@ void Anime::jump(unsigned index, unsigned count)
 #ifdef _DEBUG
 	if (index >= m_size)
 	{
-		LOG(L"asc::Anime jumpŠÖ”‚Å‘¶İ‚µ‚È‚¢index‚ÉƒAƒNƒZƒX‚µ‚Ü‚µ‚½B");
+		LOG(L"asc::Anime jumpé–¢æ•°ã§å­˜åœ¨ã—ãªã„indexã«ã‚¢ã‚¯ã‚»ã‚¹ã—ã¾ã—ãŸã€‚");
 	}
 #endif
 	m_index = index;
@@ -124,7 +124,7 @@ const RectF Anime::drawAt(double x, double y, const Color& diffuse) const
 
 const RectF Anime::drawAt(const Vec2& pos, const Color& diffuse) const
 {
-	return get().draw(pos, diffuse);
+	return get().drawAt(pos, diffuse);
 }
 
 const TextureRegion Anime::operator ()(double x, double y, double w, double h) const
