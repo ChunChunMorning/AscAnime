@@ -9,7 +9,7 @@ namespace asc
 	/// <summary>
 	/// パラパラ漫画のようなアニメーション
 	/// </summary>
-	class AssetAnime
+	class AnimeAsset
 	{
 
 	private:
@@ -29,7 +29,7 @@ namespace asc
 		/// <summary>
 		/// デフォルトコンストラクタ
 		/// </summary>
-		AssetAnime();
+		AnimeAsset();
 
 		/// <summary>
 		/// s3d::TextureAssetからasc::Animeを作成します。
@@ -43,7 +43,7 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
-		AssetAnime(const TextureAssetName& name, size_t size, int32 duration);
+		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration);
 
 		/// <summary>
 		/// s3d::TextureAssetからasc::Animeを作成します。
@@ -57,12 +57,12 @@ namespace asc
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
 		/// </param>
-		AssetAnime(const TextureAssetName& name, size_t size, const Array<int32>& duration);
+		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration);
 
 		/// <summary>
 		/// デストラクタ
 		/// </summary>
-		virtual ~AssetAnime();
+		virtual ~AnimeAsset();
 
 		/// <summary>
 		/// 1コマの幅（ピクセル）
