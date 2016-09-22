@@ -43,11 +43,15 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
-		Anime(const Texture& texture, size_t size, int32 duration) :
+		Anime(const Texture& texture, size_t size, int32 duration, bool isStarted = true) :
 			m_texture(texture),
 			m_size(size),
 			m_duration(size, duration),
-			m_index(0) {}
+			m_index(0)
+		{
+			if (isStarted)
+				m_stopwatch.start();
+		}
 
 		/// <summary>
 		/// s3d::Textureからasc::Animeを作成します。
@@ -61,11 +65,15 @@ namespace asc
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
 		/// </param>
-		Anime(const Texture& texture, size_t size, const Array<int32>& duration) :
+		Anime(const Texture& texture, size_t size, const Array<int32>& duration, bool isStarted) :
 			m_texture(texture),
 			m_size(size),
 			m_duration(duration),
-			m_index(0) {}
+			m_index(0)
+		{
+			if(isStarted)
+				m_stopwatch.start();
+		}
 
 		/// <summary>
 		/// デストラクタ
