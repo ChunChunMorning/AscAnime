@@ -46,6 +46,9 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
+		/// <param name="startImmediately">
+		/// 即座にアニメーションを開始する場合は true
+		/// </param>
 		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration, bool startImmediately = true) :
 			m_name(name),
 			m_size(size),
@@ -67,6 +70,9 @@ namespace asc
 		/// </param>
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
+		/// </param>
+		/// <param name="startImmediately">
+		/// 即座にアニメーションを開始する場合は true
 		/// </param>
 		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration, bool startImmediately = true) :
 			m_name(name),
