@@ -43,13 +43,13 @@ namespace asc
 		/// <param name="duration">
 		/// 1ƒRƒ}‚Ì•`‰æŽžŠÔ[ƒ~ƒŠ•b]
 		/// </param>
-		Anime(const Texture& texture, size_t size, int32 duration, bool isStarted = true) :
+		Anime(const Texture& texture, size_t size, int32 duration, bool startImmediately = true) :
 			m_texture(texture),
 			m_size(size),
 			m_duration(size, duration),
 			m_index(0)
 		{
-			if (isStarted)
+			if (startImmediately)
 				m_stopwatch.start();
 		}
 
@@ -65,13 +65,13 @@ namespace asc
 		/// <param name="duration">
 		/// ŠeƒRƒ}‚Ì•`‰æŽžŠÔ[ƒ~ƒŠ•b]
 		/// </param>
-		Anime(const Texture& texture, size_t size, const Array<int32>& duration, bool isStarted) :
+		Anime(const Texture& texture, size_t size, const Array<int32>& duration, bool startImmediately = true) :
 			m_texture(texture),
 			m_size(size),
 			m_duration(duration),
 			m_index(0)
 		{
-			if(isStarted)
+			if(startImmediately)
 				m_stopwatch.start();
 		}
 
