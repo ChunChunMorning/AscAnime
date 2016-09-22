@@ -9,6 +9,9 @@ namespace asc
 	/// <summary>
 	/// パラパラ漫画のようなアニメーション
 	/// </summary>
+	/// <remarks>
+	/// asc::Animeと違いTextureAssetに登録されたTextureを使用します.
+	/// </remarks>
 	class AnimeAsset
 	{
 
@@ -20,9 +23,9 @@ namespace asc
 
 		Array<int32> m_duration;
 
-		int m_index;
-
 		Stopwatch m_stopwatch;
+
+		int32 m_length;
 
 	public:
 
@@ -43,11 +46,15 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
-		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration) :
+		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration, bool startImmediately = true) :
 			m_name(name),
 			m_size(size),
 			m_duration(size, duration),
-			m_index(0) {}
+			m_length(size * duration)
+		{
+			if (startImmediately)
+				m_stopwatch.start();
+		}
 
 		/// <summary>
 		/// s3d::TextureAssetからasc::Animeを作成します。
@@ -61,11 +68,18 @@ namespace asc
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
 		/// </param>
-		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration) :
+		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration, bool startImmediately = true) :
 			m_name(name),
 			m_size(size),
 			m_duration(duration),
-			m_index(0) {}
+			m_length(0)
+		{
+			for (const auto& d : duration)
+				m_length += d;
+
+			if (startImmediately)
+				m_stopwatch.start();
+		}
 
 		/// <summary>
 		/// デストラクタ
@@ -81,6 +95,11 @@ namespace asc
 		/// 1コマの高さ（ピクセル）
 		/// </summary>
 		__declspec(property(get = _get_height)) uint32 height;
+
+		/// <summary>
+		/// 現在再生しているコマ
+		/// </summary>
+		__declspec(property(get = _get_index)) uint32 index;
 
 		/// <summary>
 		/// 内部のTexture アセットをプリロードします。
@@ -165,11 +184,7 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void reset() noexcept
-		{
-			m_index = 0;
-			m_stopwatch.reset();
-		}
+		void reset() noexcept { m_stopwatch.reset(); }
 
 		/// <summary>
 		/// 初期状態にリセットして、アニメーションを開始します。
@@ -177,11 +192,18 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void restart()
-		{
-			m_index = 0;
-			m_stopwatch.restart();
-		}
+		void restart() { m_stopwatch.restart(); }
+
+		/// <summary>
+		/// アニメーションの経過時間を変更します。
+		/// </summary>
+		/// <param name="time">
+		/// 新しく設定する経過時間[ミリ秒]
+		/// </param>
+		/// <returns>
+		/// なし
+		/// </returns>
+		void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
 
 		/// <summary>
 		/// １コマの描画時間を設定します。
@@ -212,40 +234,6 @@ namespace asc
 		}
 
 		/// <summary>
-		/// 特定のコマに飛びます。
-		/// </summary>
-		/// <param name="duration">
-		/// 飛んだ先のコマの経過時間
-		/// </param>
-		/// <returns>
-		/// なし
-		/// </returns>
-		void jump(int index, const MillisecondsF& time = MillisecondsF(0.0))
-		{
-			m_index = index;
-			m_stopwatch.set(time);
-		}
-
-		/// <summary>
-		/// アニメーションを更新します。
-		/// </summary>
-		/// <returns>
-		/// なし
-		/// </returns>
-		void update()
-		{
-			auto ms = m_stopwatch.ms();
-
-			while (ms > m_duration[m_index])
-			{
-				ms -= m_duration[m_index];
-				m_index >= m_size - 1 ? m_index = 0 : m_index++;
-			}
-
-			m_stopwatch.set(MicrosecondsF(ms * 1000));
-		}
-
-		/// <summary>
 		/// 描画するTextureRegionを取得します。
 		/// </summary>
 		/// <returns>
@@ -253,7 +241,7 @@ namespace asc
 		/// </returns>
 		const TextureRegion get() const
 		{
-			return TextureAsset(m_name).uv(static_cast<double>(m_index) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return TextureAsset(m_name).uv(static_cast<double>(index) / m_size, 0.0, 1.0 / m_size, 1.0);
 		}
 
 		/// <summary>
@@ -301,7 +289,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion operator ()(double x, double y, double w, double h) const
 		{
-			return TextureAsset(m_name)(m_index * width + x, y, w, h);
+			return TextureAsset(m_name)(index * width + x, y, w, h);
 		}
 
 		/// <summary>
@@ -309,7 +297,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion uv(double u, double v, double w, double h) const
 		{
-			return TextureAsset(m_name).uv((m_index + u) / m_size, v, w / m_size, h);
+			return TextureAsset(m_name).uv((index + u) / m_size, v, w / m_size, h);
 		}
 
 		/// <summary>
@@ -317,7 +305,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion uv(const RectF& rect) const
 		{
-			return TextureAsset(m_name).uv(rect.movedBy(m_index * width, 0.0));
+			return TextureAsset(m_name).uv(rect.movedBy(index * width, 0.0));
 		}
 
 		/// <summary>
@@ -403,5 +391,19 @@ namespace asc
 		uint32 _get_width() const { return TextureAsset(m_name).width / static_cast<uint32>(m_size); }
 
 		uint32 _get_height() const { return TextureAsset(m_name).height; }
+
+		uint32 _get_index() const
+		{
+			auto ms = m_stopwatch.ms() % m_length;
+			auto currentIndex = 0;
+
+			while (ms > m_duration[currentIndex])
+			{
+				ms -= m_duration[currentIndex];
+				currentIndex++;
+			}
+
+			return currentIndex;
+		}
 	};
 }
