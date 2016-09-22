@@ -208,6 +208,17 @@ namespace asc
 		}
 
 		/// <summary>
+		/// アニメーションの経過時間を変更します。
+		/// </summary>
+		/// <param name="time">
+		/// 新しく設定する経過時間[ミリ秒]
+		/// </param>
+		/// <returns>
+		/// なし
+		/// </returns>
+		void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
+
+		/// <summary>
 		/// 各コマの描画時間を設定します。
 		/// </summary>
 		/// <param name="duration">
