@@ -27,9 +27,13 @@ namespace asc
 
 		int32 m_length;
 
+		bool m_isLoop;
+
 		uint32 index() const
 		{
-			auto ms = m_stopwatch.ms() % m_length;
+			auto ms = m_isLoop ?
+				m_stopwatch.ms() % m_length :
+				Min(m_stopwatch.ms(), m_length);
 			auto currentIndex = 0;
 
 			while (ms > m_duration[currentIndex])
@@ -60,14 +64,18 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
+		/// <param name="isLoop">
+		/// アニメーションをループさせる場合は true
+		/// </param>
 		/// <param name="startImmediately">
 		/// 即座にアニメーションを開始する場合は true
 		/// </param>
-		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration, bool startImmediately = true) :
+		AnimeAsset(const TextureAssetName& name, size_t size, int32 duration, bool isLoop = true, bool startImmediately = true) :
 			m_name(name),
 			m_size(size),
 			m_duration(size, duration),
-			m_length(size * duration)
+			m_length(size * duration),
+			m_isLoop(isLoop)
 		{
 			if (startImmediately)
 				m_stopwatch.start();
@@ -85,14 +93,18 @@ namespace asc
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
 		/// </param>
+		/// <param name="isLoop">
+		/// アニメーションをループさせる場合は true
+		/// </param>
 		/// <param name="startImmediately">
 		/// 即座にアニメーションを開始する場合は true
 		/// </param>
-		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration, bool startImmediately = true) :
+		AnimeAsset(const TextureAssetName& name, size_t size, const Array<int32>& duration, bool isLoop = true, bool startImmediately = true) :
 			m_name(name),
 			m_size(size),
 			m_duration(duration),
-			m_length(0)
+			m_length(0),
+			m_isLoop(isLoop)
 		{
 			for (const auto& d : duration)
 				m_length += d;
