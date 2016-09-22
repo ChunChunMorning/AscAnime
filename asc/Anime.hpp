@@ -29,7 +29,7 @@ namespace asc
 		/// <summary>
 		/// デフォルトコンストラクタ
 		/// </summary>
-		Anime();
+		Anime() = default;
 
 		/// <summary>
 		/// s3d::Textureからasc::Animeを作成します。
@@ -43,7 +43,11 @@ namespace asc
 		/// <param name="duration">
 		/// 1コマの描画時間[ミリ秒]
 		/// </param>
-		Anime(const Texture& texture, size_t size, int32 duration);
+		Anime(const Texture& texture, size_t size, int32 duration) :
+			m_texture(texture),
+			m_size(size),
+			m_duration(size, duration),
+			m_index(0) {}
 
 		/// <summary>
 		/// s3d::Textureからasc::Animeを作成します。
@@ -57,12 +61,16 @@ namespace asc
 		/// <param name="duration">
 		/// 各コマの描画時間[ミリ秒]
 		/// </param>
-		Anime(const Texture& texture, size_t size, const Array<int32>& duration);
+		Anime(const Texture& texture, size_t size, const Array<int32>& duration) :
+			m_texture(texture),
+			m_size(size),
+			m_duration(duration),
+			m_index(0) {}
 
 		/// <summary>
 		/// デストラクタ
 		/// </summary>
-		virtual ~Anime();
+		virtual ~Anime() = default;
 
 		/// <summary>
 		/// 1コマの幅（ピクセル）
@@ -152,7 +160,11 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void reset() noexcept;
+		void reset() noexcept
+		{
+			m_index = 0;
+			m_stopwatch.reset();
+		}
 
 		/// <summary>
 		/// 初期状態にリセットして、アニメーションを開始します。
@@ -160,7 +172,11 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void restart();
+		void restart()
+		{
+			m_index = 0;
+			m_stopwatch.restart();
+		}
 
 		/// <summary>
 		/// １コマの描画時間を設定します。
@@ -171,7 +187,10 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void setDuration(int32 duration);
+		void setDuration(int32 duration)
+		{
+			m_duration = Array<int32>(m_size, duration);
+		}
 
 		/// <summary>
 		/// 各コマの描画時間を設定します。
@@ -182,7 +201,10 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void setDuration(const Array<int32>& duration);
+		void setDuration(const Array<int32>& duration)
+		{
+			m_duration = duration;
+		}
 
 		/// <summary>
 		/// 特定のコマに飛びます。
@@ -193,7 +215,11 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void jump(int index, const MillisecondsF& time = MillisecondsF(0.0));
+		void jump(int index, const MillisecondsF& time = MillisecondsF(0.0))
+		{
+			m_index = index;
+			m_stopwatch.set(time);
+		}
 
 		/// <summary>
 		/// アニメーションを更新します。
@@ -201,7 +227,18 @@ namespace asc
 		/// <returns>
 		/// なし
 		/// </returns>
-		void update();
+		void update()
+		{
+			auto ms = m_stopwatch.ms();
+
+			while (ms > m_duration[m_index])
+			{
+				ms -= m_duration[m_index];
+				m_index >= m_size - 1 ? m_index = 0 : m_index++;
+			}
+
+			m_stopwatch.set(MicrosecondsF(ms * 1000));
+		}
 
 		/// <summary>
 		/// 描画するTextureRegionを取得します。
@@ -209,7 +246,10 @@ namespace asc
 		/// <returns>
 		/// 描画するTextureRegion
 		/// </returns>
-		const TextureRegion get() const;
+		const TextureRegion get() const
+		{
+			return m_texture.uv(static_cast<double>(m_index) / m_size, 0.0, 1.0 / m_size, 1.0);
+		}
 
 		/// <summary>
 		/// s3d::Texture::draw
