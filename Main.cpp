@@ -7,7 +7,6 @@ void Main()
 
 	while (System::Update())
 	{
-		anime.update();
 		anime.draw(Mouse::Pos());
 	}
 }
