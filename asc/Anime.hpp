@@ -23,6 +23,20 @@ namespace asc
 
 		int32 m_length;
 
+		uint32 index() const
+		{
+			auto ms = m_stopwatch.ms() % m_length;
+			auto currentIndex = 0;
+
+			while (ms > m_duration[currentIndex])
+			{
+				ms -= m_duration[currentIndex];
+				currentIndex++;
+			}
+
+			return currentIndex;
+		}
+
 	public:
 
 		/// <summary>
@@ -97,11 +111,6 @@ namespace asc
 		/// 1コマの高さ（ピクセル）
 		/// </summary>
 		__declspec(property(get = _get_height)) uint32 height;
-
-		/// <summary>
-		/// 現在再生しているコマ
-		/// </summary>
-		__declspec(property(get = _get_index)) uint32 index;
 
 		/// <summary>
 		/// 内部のテクスチャをリリースします。
@@ -243,7 +252,7 @@ namespace asc
 		/// </returns>
 		const TextureRegion get() const
 		{
-			return m_texture.uv(static_cast<double>(index) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return m_texture.uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
 		}
 
 		/// <summary>
@@ -291,7 +300,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion operator ()(double x, double y, double w, double h) const
 		{
-			return m_texture(index * width + x, y, w, h);
+			return m_texture(index() * width + x, y, w, h);
 		}
 
 		/// <summary>
@@ -299,7 +308,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion uv(double u, double v, double w, double h) const
 		{
-			return m_texture.uv((index + u) / m_size, v, w / m_size, h);
+			return m_texture.uv((index() + u) / m_size, v, w / m_size, h);
 		}
 
 		/// <summary>
@@ -307,7 +316,7 @@ namespace asc
 		/// </summary>
 		const TextureRegion uv(const RectF& rect) const
 		{
-			return m_texture.uv(rect.movedBy(index * width, 0.0));
+			return m_texture.uv(rect.movedBy(index() * width, 0.0));
 		}
 
 		/// <summary>
@@ -393,19 +402,5 @@ namespace asc
 		uint32 _get_width() const { return m_texture.width / static_cast<uint32>(m_size); }
 
 		uint32 _get_height() const { return m_texture.height; }
-
-		uint32 _get_index() const
-		{
-			auto ms = m_stopwatch.ms() % m_length;
-			auto currentIndex = 0;
-
-			while (ms > m_duration[currentIndex])
-			{
-				ms -= m_duration[currentIndex];
-				currentIndex++;
-			}
-
-			return currentIndex;
-		}
 	};
 }
