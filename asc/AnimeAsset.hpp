@@ -155,7 +155,7 @@ namespace asc
 		/// <summary>
 		/// 内部のテクスチャハンドルの ID を示します。
 		/// </summary>
-		HandleIDType id() const { return TextureAsset(m_name).id(); };
+		Texture::IDType id() const { return TextureAsset(m_name).id(); };
 
 		/// <summary>
 		/// 内部のテクスチャが空かどうかを示します。
@@ -179,7 +179,7 @@ namespace asc
 		/// <remarks>
 		/// アニメーションが開始されている、または開始後一時停止中である場合 true, それ以外の場合は false
 		/// </remarks>
-		bool isActive() const noexcept { return m_stopwatch.isActive(); }
+		bool isActive() const noexcept { return m_stopwatch.isRunning(); }
 
 		/// <summary>
 		/// アニメーションが一時停止中であるかを示します。
@@ -338,85 +338,85 @@ namespace asc
 		/// <summary>
 		/// s3d::Texture::mirror
 		/// </summary>
-		const TextureRegion mirror() const
+		const TextureRegion mirrored() const
 		{
-			return get().mirror();
+			return get().mirrored();
 		}
 
 		/// <summary>
 		/// s3d::Texture::flip
 		/// </summary>
-		const TextureRegion flip() const
+		const TextureRegion flipped() const
 		{
-			return get().flip();
+			return get().flipped();
 		}
 
 		/// <summary>
 		/// s3d::Texture::scaling
 		/// </summary>
-		const TextureRegion scale(double scaling) const
+		const TextureRegion scaled(double scaling) const
 		{
-			return get().scale(scaling);
+			return get().scaled(scaling);
 		}
 
 		/// <summary>
 		/// s3d::Texture::scaling
 		/// </summary>
-		const TextureRegion scale(double xScaling, double yScaling) const
+		const TextureRegion scaled(double xScaling, double yScaling) const
 		{
-			return get().scale(xScaling, yScaling);
+			return get().scaled(xScaling, yScaling);
 		}
 
 		/// <summary>
 		/// s3d::Texture::scaling
 		/// </summary>
-		const TextureRegion scale(const Vec2& scaling) const
+		const TextureRegion scaled(const Vec2& scaling) const
 		{
-			return get().scale(scaling);
+			return get().scaled(scaling);
 		}
 
 		/// <summary>
 		/// s3d::Texture::resize
 		/// </summary>
-		const TextureRegion resize(double width, double height) const
+		const TextureRegion resized(double width, double height) const
 		{
-			return get().resize(width, height);
+			return get().resized(width, height);
 		}
 
 		/// <summary>
 		/// s3d::Texture::resize
 		/// </summary>
-		const TextureRegion resize(const Vec2& size) const
+		const TextureRegion resized(const Vec2& size) const
 		{
-			return get().resize(size);
+			return get().resized(size);
 		}
 
 		/// <summary>
 		/// s3d::Texture::rotate
 		/// </summary>
-		const TexturedQuad rotate(double radian) const
+		const TexturedQuad rotated(double radian) const
 		{
-			return get().rotate(radian);
+			return get().rotated(radian);
 		}
 
 		/// <summary>
 		/// s3d::Texture::rotateAt
 		/// </summary>
-		const TexturedQuad rotateAt(double x, double y, double radian) const
+		const TexturedQuad rotatedAt(double x, double y, double radian) const
 		{
-			return get().rotateAt(x, y, radian);
+			return get().rotatedAt(x, y, radian);
 		}
 
 		/// <summary>
 		/// s3d::Texture::rotateAt
 		/// </summary>
-		const TexturedQuad rotateAt(const Vec2& pos, double radian) const
+		const TexturedQuad rotatedAt(const Vec2& pos, double radian) const
 		{
-			return get().rotateAt(pos, radian);
+			return get().rotatedAt(pos, radian);
 		}
 
-		uint32 _get_width() const { return TextureAsset(m_name).width / static_cast<uint32>(m_size); }
+		uint32 _get_width() const { return TextureAsset(m_name).width() / static_cast<uint32>(m_size); }
 
-		uint32 _get_height() const { return TextureAsset(m_name).height; }
+		uint32 _get_height() const { return TextureAsset(m_name).height(); }
 	};
 }
