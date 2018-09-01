@@ -5,18 +5,40 @@
 
 void Main()
 {
-	Texture texture(U"asc_anime_sample.png");
-
 	TextureAsset::Register(U"sample", U"asc_anime_sample.png");
 
-	asc::Anime anime(texture, 4, 0.1s);
+	Texture texture(U"asc_anime_sample.png");
 
-	asc::AnimeAsset animeAsset(U"sample", { 0.1s, 0.5s, 0.1s, 0.5s });
+	asc::Anime anime(texture, 4, 0.1s);
+	asc::AnimeAsset animeAsset(U"sample", { 0.1s, 0.5s, 0.1s, 0.1s });
+
+	bool stop = false;
+	bool slow = false;
 
 	while (System::Update())
 	{
-		anime.draw(Cursor::Pos());
+		if (MouseL.down())
+		{
+			stop = !stop;
+		}
 
-		animeAsset.draw(50, 50);
+		if (MouseR.down())
+		{
+			slow = !slow;
+		}
+
+		ClearPrint();
+		Print(U"[MouseL] stop : {}"_fmt(stop));
+		Print(U"[MouseR] slow : {}"_fmt(slow));
+
+		if (!stop)
+		{
+			anime.update(System::DeltaTime());
+		}
+
+		animeAsset.update((slow ? 0.2 : 1.0) * System::DeltaTime());
+
+		anime.draw(Cursor::Pos());
+		animeAsset.draw(50, 70);
 	}
 }

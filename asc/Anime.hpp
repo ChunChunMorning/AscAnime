@@ -20,35 +20,36 @@ namespace asc
 
 			Array<SecondsF> m_durations;
 
-			Stopwatch m_stopwatch;
+			SecondsF m_elapsedTime;
 
 			bool m_isLoop;
 
-			SecondsF elapsedTime() const
+			void updateElapsedTime(SecondsF elapsedTime)
 			{
 				const auto animationLength = m_durations.sum();
-				const SecondsF elapsedTime = m_stopwatch.elapsed();
 
 				if (!m_isLoop)
 				{
-					return Min(elapsedTime, animationLength);
+					m_elapsedTime = Min(elapsedTime, animationLength);
+
+					return;
 				}
 
-				return static_cast<SecondsF>(Math::Fmod(elapsedTime.count(), animationLength.count()));
+				m_elapsedTime = SecondsF(Math::Fmod(elapsedTime.count(), animationLength.count()));
 			}
 
 			uint32 index() const
 			{
-				auto time = elapsedTime();
+				auto animationTime = m_elapsedTime;
 
 				for (uint32 index = 0; index < m_durations.size(); ++index)
 				{
-					if (time < m_durations[index])
+					if (animationTime < m_durations[index])
 					{
 						return index;
 					}
 
-					time -= m_durations[index];
+					animationTime -= m_durations[index];
 				}
 
 				assert(m_durations.size());
@@ -81,8 +82,8 @@ namespace asc
 			/// <param name="startImmediately">
 			/// 即座にアニメーションを開始する場合は true
 			/// </param>
-			Anime(const TextureData& texture, size_t size, SecondsF duration, bool isLoop = true, bool startImmediately = true) :
-				Anime(texture, Array<SecondsF>(size, duration), isLoop, startImmediately) {}
+			Anime(const TextureData& texture, size_t size, SecondsF duration, bool isLoop = true) :
+				Anime(texture, Array<SecondsF>(size, duration), isLoop) {}
 
 			/// <summary>
 			/// s3d::Textureからasc::Animeを作成します。
@@ -102,14 +103,10 @@ namespace asc
 			/// <param name="startImmediately">
 			/// 即座にアニメーションを開始する場合は true
 			/// </param>
-			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true, bool startImmediately = true) :
+			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true) :
 				m_data(texture),
 				m_durations(duration),
-				m_isLoop(isLoop)
-			{
-				if (startImmediately)
-					m_stopwatch.start();
-			}
+				m_isLoop(isLoop) {}
 
 			/// <summary>
 			/// 1コマの幅（ピクセル）
@@ -151,61 +148,15 @@ namespace asc
 			/// </returns>
 			bool isEmpty() const;
 
-			/// <summary>
-			/// アニメーションを開始します。
-			/// </summary>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void start() { m_stopwatch.start(); }
+			void update(double seconds)
+			{
+				update(SecondsF(seconds));
+			}
 
-			/// <summary>
-			/// アニメーションが動作中であるかを示します。
-			/// </summary>
-			/// <remarks>
-			/// アニメーションが開始されている、または開始後一時停止中である場合 true, それ以外の場合は false
-			/// </remarks>
-			bool isActive() const noexcept { return m_stopwatch.isRunning(); }
-
-			/// <summary>
-			/// アニメーションが一時停止中であるかを示します。
-			/// </summary>
-			/// <remarks>
-			/// アニメーションが開始後一時停止中である場合 true, それ以外の場合は false
-			/// </remarks>
-			bool isPaused() const noexcept { return m_stopwatch.isPaused(); }
-
-			/// <summary>
-			/// アニメーションを一時停止します。
-			/// </summary>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void pause() { m_stopwatch.pause(); }
-
-			/// <summary>
-			/// アニメーションが一時停止中である場合、再開します。
-			/// </summary>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void resume() { m_stopwatch.resume(); }
-
-			/// <summary>
-			/// アニメーションを停止し、初期状態にリセットします。
-			/// </summary>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void reset() noexcept { m_stopwatch.reset(); }
-
-			/// <summary>
-			/// 初期状態にリセットして、アニメーションを開始します。
-			/// </summary>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void restart() { m_stopwatch.restart(); }
+			void update(SecondsF deltaTime)
+			{
+				updateElapsedTime(m_elapsedTime + deltaTime);
+			}
 
 			/// <summary>
 			/// アニメーションの経過時間を変更します。
@@ -216,7 +167,10 @@ namespace asc
 			/// <returns>
 			/// なし
 			/// </returns>
-			void set(SecondsF time) { m_stopwatch.set(time); }
+			void set(SecondsF time) noexcept
+			{
+				updateElapsedTime(time);
+			}
 
 			/// <summary>
 			/// 描画するTextureRegionを取得します。
