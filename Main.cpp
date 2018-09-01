@@ -1,35 +1,22 @@
-﻿# include <Siv3D.hpp>
+﻿
+# include <Siv3D.hpp>
+
 # include "asc/Anime.hpp"
 
 void Main()
 {
 	Texture texture(U"asc_anime_sample.png");
 
-	asc::Anime anime(texture, 4, 100);
+	TextureAsset::Register(U"sample", U"asc_anime_sample.png");
+
+	asc::Anime anime(texture, 4, 0.1s);
+
+	asc::AnimeAsset animeAsset(U"sample", { 0.1s, 0.5s, 0.1s, 0.5s });
 
 	while (System::Update())
 	{
 		anime.draw(Cursor::Pos());
+
+		animeAsset.draw(50, 50);
 	}
 }
-
-
-/*
-
-// TextureAssetに登録されたTextureを使用する場合.
-
-# include <Siv3D.hpp>
-# include "asc/AnimeAsset.hpp"
-
-void Main()
-{
-	TextureAsset::Register(U"anime", U"asc_anime_sample.png");
-
-	asc::AnimeAsset anime(U"anime", 4, 100);
-
-	while (System::Update())
-	{
-		anime.draw(Cursor::Pos());
-	}
-}
-*/

@@ -18,30 +18,42 @@ namespace asc
 
 			TextureData m_data;
 
-			size_t m_size;
-
-			Array<int32> m_duration;
+			Array<SecondsF> m_durations;
 
 			Stopwatch m_stopwatch;
 
-			int32 m_length;
-
 			bool m_isLoop;
+
+			SecondsF elapsedTime() const
+			{
+				const auto animationLength = m_durations.sum();
+				const SecondsF elapsedTime = m_stopwatch.elapsed();
+
+				if (!m_isLoop)
+				{
+					return Min(elapsedTime, animationLength);
+				}
+
+				return static_cast<SecondsF>(Math::Fmod(elapsedTime.count(), animationLength.count()));
+			}
 
 			uint32 index() const
 			{
-				auto ms = m_isLoop ?
-					m_stopwatch.ms() % m_length :
-					Min(m_stopwatch.ms(), m_length);
-				auto currentIndex = 0;
+				auto time = elapsedTime();
 
-				while (ms > m_duration[currentIndex])
+				for (uint32 index = 0; index < m_durations.size(); ++index)
 				{
-					ms -= m_duration[currentIndex];
-					currentIndex++;
+					if (time < m_durations[index])
+					{
+						return index;
+					}
+
+					time -= m_durations[index];
 				}
 
-				return currentIndex;
+				assert(m_durations.size());
+
+				return m_durations.size() - 1;
 			}
 
 		public:
@@ -61,7 +73,7 @@ namespace asc
 			/// テクスチャに含まれるコマ数
 			/// </param>
 			/// <param name="duration">
-			/// 1コマの描画時間[ミリ秒]
+			/// 1コマの描画時間[秒]
 			/// </param>
 			/// <param name="isLoop">
 			/// アニメーションをループさせる場合は true
@@ -69,17 +81,8 @@ namespace asc
 			/// <param name="startImmediately">
 			/// 即座にアニメーションを開始する場合は true
 			/// </param>
-
-			Anime(const TextureData& texture, size_t size, int32 duration, bool isLoop = true, bool startImmediately = true) :
-				m_data(texture),
-				m_size(size),
-				m_duration(size, duration),
-				m_length(size * duration),
-				m_isLoop(isLoop)
-			{
-				if (startImmediately)
-					m_stopwatch.start();
-			}
+			Anime(const TextureData& texture, size_t size, SecondsF duration, bool isLoop = true, bool startImmediately = true) :
+				Anime(texture, Array<SecondsF>(size, duration), isLoop, startImmediately) {}
 
 			/// <summary>
 			/// s3d::Textureからasc::Animeを作成します。
@@ -99,16 +102,11 @@ namespace asc
 			/// <param name="startImmediately">
 			/// 即座にアニメーションを開始する場合は true
 			/// </param>
-			Anime(const TextureData& texture, size_t size, const Array<int32>& duration, bool isLoop = true, bool startImmediately = true) :
+			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true, bool startImmediately = true) :
 				m_data(texture),
-				m_size(size),
-				m_duration(duration),
-				m_length(0),
+				m_durations(duration),
 				m_isLoop(isLoop)
 			{
-				for (const auto& d : duration)
-					m_length += d;
-
 				if (startImmediately)
 					m_stopwatch.start();
 			}
@@ -210,21 +208,6 @@ namespace asc
 			void restart() { m_stopwatch.restart(); }
 
 			/// <summary>
-			/// １コマの描画時間を設定します。
-			/// </summary>
-			/// <param name="duration">
-			/// 1コマの描画時間[ミリ秒]
-			/// </param>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void setDuration(int32 duration)
-			{
-				m_duration = Array<int32>(m_size, duration);
-				m_length = m_size * duration;
-			}
-
-			/// <summary>
 			/// アニメーションの経過時間を変更します。
 			/// </summary>
 			/// <param name="time">
@@ -233,25 +216,7 @@ namespace asc
 			/// <returns>
 			/// なし
 			/// </returns>
-			void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
-
-			/// <summary>
-			/// 各コマの描画時間を設定します。
-			/// </summary>
-			/// <param name="duration">
-			/// 各コマの描画時間[ミリ秒]
-			/// </param>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void setDuration(const Array<int32>& duration)
-			{
-				m_duration = duration;
-
-				m_length = 0;
-				for (const auto& d : duration)
-					m_length += d;
-			}
+			void set(SecondsF time) { m_stopwatch.set(time); }
 
 			/// <summary>
 			/// 描画するTextureRegionを取得します。
@@ -314,7 +279,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion uv(double u, double v, double w, double h) const
 			{
-				return m_data.uv((index() + u) / m_size, v, w / m_size, h);
+				return m_data.uv((index() + u) / m_durations.size(), v, w / m_durations.size(), h);
 			}
 
 			/// <summary>
@@ -414,12 +379,12 @@ namespace asc
 
 		uint32 Anime<Texture>::width() const
 		{
-			return m_data.width() / static_cast<uint32>(m_size);
+			return m_data.width() / static_cast<uint32>(m_durations.size());
 		}
 
 		uint32 Anime<AssetName>::width() const
 		{
-			return TextureAsset(m_data).width() / static_cast<uint32>(m_size);
+			return TextureAsset(m_data).width() / static_cast<uint32>(m_durations.size());
 		}
 
 		uint32 Anime<Texture>::height() const
@@ -444,12 +409,12 @@ namespace asc
 
 		const TextureRegion Anime<Texture>::get() const
 		{
-			return m_data.uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return m_data.uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
 		const TextureRegion Anime<AssetName>::get() const
 		{
-			return TextureAsset(m_data).uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return TextureAsset(m_data).uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 	}
 
