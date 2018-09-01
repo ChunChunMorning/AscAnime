@@ -1,418 +1,468 @@
-# pragma once
+ï»¿# pragma once
+
 # include <Siv3D.hpp>
 
 namespace asc
 {
 	using namespace s3d;
 
-	/// <summary>
-	/// ƒpƒ‰ƒpƒ‰–Ÿ‰æ‚Ì‚æ‚¤‚ÈƒAƒjƒ[ƒVƒ‡ƒ“
-	/// </summary>
-	class Anime
+	namespace detail
 	{
-
-	private:
-
-		Texture m_texture;
-
-		size_t m_size;
-
-		Array<int32> m_duration;
-
-		Stopwatch m_stopwatch;
-
-		int32 m_length;
-
-		bool m_isLoop;
-
-		uint32 index() const
+		/// <summary>
+		/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+		/// </summary>
+		template<typename TextureData>
+		class Anime
 		{
-			auto ms = m_isLoop ?
-				m_stopwatch.ms() % m_length :
-				Min(m_stopwatch.ms(), m_length);
-			auto currentIndex = 0;
+		private:
 
-			while (ms > m_duration[currentIndex])
+			TextureData m_data;
+
+			size_t m_size;
+
+			Array<int32> m_duration;
+
+			Stopwatch m_stopwatch;
+
+			int32 m_length;
+
+			bool m_isLoop;
+
+			uint32 index() const
 			{
-				ms -= m_duration[currentIndex];
-				currentIndex++;
+				auto ms = m_isLoop ?
+					m_stopwatch.ms() % m_length :
+					Min(m_stopwatch.ms(), m_length);
+				auto currentIndex = 0;
+
+				while (ms > m_duration[currentIndex])
+				{
+					ms -= m_duration[currentIndex];
+					currentIndex++;
+				}
+
+				return currentIndex;
 			}
 
-			return currentIndex;
-		}
+		public:
 
-	public:
+			/// <summary>
+			/// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+			/// </summary>
+			Anime() = default;
 
-		/// <summary>
-		/// ƒfƒtƒHƒ‹ƒgƒRƒ“ƒXƒgƒ‰ƒNƒ^
-		/// </summary>
-		Anime() = default;
+			/// <summary>
+			/// s3d::Textureã‹ã‚‰asc::Animeã‚’ä½œæˆã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="texture">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+			/// </param>
+			/// <param name="size">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ã«å«ã¾ã‚Œã‚‹ã‚³ãƒæ•°
+			/// </param>
+			/// <param name="duration">
+			/// 1ã‚³ãƒã®æç”»æ™‚é–“[ãƒŸãƒªç§’]
+			/// </param>
+			/// <param name="isLoop">
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ãƒ«ãƒ¼ãƒ—ã•ã›ã‚‹å ´åˆã¯ true
+			/// </param>
+			/// <param name="startImmediately">
+			/// å³åº§ã«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’é–‹å§‹ã™ã‚‹å ´åˆã¯ true
+			/// </param>
 
-		/// <summary>
-		/// s3d::Texture‚©‚çasc::Anime‚ğì¬‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="texture">
-		/// ƒeƒNƒXƒ`ƒƒ
-		/// </param>
-		/// <param name="size">
-		/// ƒeƒNƒXƒ`ƒƒ‚ÉŠÜ‚Ü‚ê‚éƒRƒ}”
-		/// </param>
-		/// <param name="duration">
-		/// 1ƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <param name="isLoop">
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğƒ‹[ƒv‚³‚¹‚éê‡‚Í true
-		/// </param>
-		/// <param name="startImmediately">
-		/// ‘¦À‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚·‚éê‡‚Í true
-		/// </param>
-		Anime(const Texture& texture, size_t size, int32 duration, bool isLoop = true, bool startImmediately = true) :
-			m_texture(texture),
-			m_size(size),
-			m_duration(size, duration),
-			m_length(size * duration),
-			m_isLoop(isLoop)
+			Anime(const TextureData& texture, size_t size, int32 duration, bool isLoop = true, bool startImmediately = true) :
+				m_data(texture),
+				m_size(size),
+				m_duration(size, duration),
+				m_length(size * duration),
+				m_isLoop(isLoop)
+			{
+				if (startImmediately)
+					m_stopwatch.start();
+			}
+
+			/// <summary>
+			/// s3d::Textureã‹ã‚‰asc::Animeã‚’ä½œæˆã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="texture">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+			/// </param>
+			/// <param name="size">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ã«å«ã¾ã‚Œã‚‹ã‚³ãƒæ•°
+			/// </param>
+			/// <param name="duration">
+			/// å„ã‚³ãƒã®æç”»æ™‚é–“[ãƒŸãƒªç§’]
+			/// </param>
+			/// <param name="isLoop">
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ãƒ«ãƒ¼ãƒ—ã•ã›ã‚‹å ´åˆã¯ true
+			/// </param>
+			/// <param name="startImmediately">
+			/// å³åº§ã«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’é–‹å§‹ã™ã‚‹å ´åˆã¯ true
+			/// </param>
+			Anime(const TextureData& texture, size_t size, const Array<int32>& duration, bool isLoop = true, bool startImmediately = true) :
+				m_data(texture),
+				m_size(size),
+				m_duration(duration),
+				m_length(0),
+				m_isLoop(isLoop)
+			{
+				for (const auto& d : duration)
+					m_length += d;
+
+				if (startImmediately)
+					m_stopwatch.start();
+			}
+
+			/// <summary>
+			/// 1ã‚³ãƒã®å¹…ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰
+			/// </summary>
+			uint32 width() const;
+
+			/// <summary>
+			/// 1ã‚³ãƒã®é«˜ã•ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰
+			/// </summary>
+			uint32 height() const;
+
+			/// <summary>
+			/// å†…éƒ¨ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ãƒªãƒªãƒ¼ã‚¹ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <remarks>
+			/// ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ã»ã‹ã®å ´æ‰€ã§åŒã˜ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒä½¿ã‚ã‚Œã¦ã„ãªã„å ´åˆã€ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã—ã¾ã™ã€‚
+			/// </remarks>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void release()
+			{
+				m_data.release();
+			}
+
+			/// <summary>
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒç©ºã§ã¯ãªã„ã‹ã‚’è¿”ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒç©ºã§ã¯ãªã„å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </returns>
+			explicit operator bool() const { return !isEmpty(); }
+
+			/// <summary>
+			/// å†…éƒ¨ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒç©ºã‹ã©ã†ã‹ã‚’ç¤ºã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒç©ºã§ã¯ãªã„å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </returns>
+			bool isEmpty() const;
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’é–‹å§‹ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void start() { m_stopwatch.start(); }
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒå‹•ä½œä¸­ã§ã‚ã‚‹ã‹ã‚’ç¤ºã—ã¾ã™ã€‚
+			/// </summary>
+			/// <remarks>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒé–‹å§‹ã•ã‚Œã¦ã„ã‚‹ã€ã¾ãŸã¯é–‹å§‹å¾Œä¸€æ™‚åœæ­¢ä¸­ã§ã‚ã‚‹å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </remarks>
+			bool isActive() const noexcept { return m_stopwatch.isRunning(); }
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒä¸€æ™‚åœæ­¢ä¸­ã§ã‚ã‚‹ã‹ã‚’ç¤ºã—ã¾ã™ã€‚
+			/// </summary>
+			/// <remarks>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒé–‹å§‹å¾Œä¸€æ™‚åœæ­¢ä¸­ã§ã‚ã‚‹å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </remarks>
+			bool isPaused() const noexcept { return m_stopwatch.isPaused(); }
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ä¸€æ™‚åœæ­¢ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void pause() { m_stopwatch.pause(); }
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒä¸€æ™‚åœæ­¢ä¸­ã§ã‚ã‚‹å ´åˆã€å†é–‹ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void resume() { m_stopwatch.resume(); }
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’åœæ­¢ã—ã€åˆæœŸçŠ¶æ…‹ã«ãƒªã‚»ãƒƒãƒˆã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void reset() noexcept { m_stopwatch.reset(); }
+
+			/// <summary>
+			/// åˆæœŸçŠ¶æ…‹ã«ãƒªã‚»ãƒƒãƒˆã—ã¦ã€ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’é–‹å§‹ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void restart() { m_stopwatch.restart(); }
+
+			/// <summary>
+			/// ï¼‘ã‚³ãƒã®æç”»æ™‚é–“ã‚’è¨­å®šã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="duration">
+			/// 1ã‚³ãƒã®æç”»æ™‚é–“[ãƒŸãƒªç§’]
+			/// </param>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void setDuration(int32 duration)
+			{
+				m_duration = Array<int32>(m_size, duration);
+				m_length = m_size * duration;
+			}
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®çµŒéæ™‚é–“ã‚’å¤‰æ›´ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="time">
+			/// æ–°ã—ãè¨­å®šã™ã‚‹çµŒéæ™‚é–“[ãƒŸãƒªç§’]
+			/// </param>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
+
+			/// <summary>
+			/// å„ã‚³ãƒã®æç”»æ™‚é–“ã‚’è¨­å®šã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="duration">
+			/// å„ã‚³ãƒã®æç”»æ™‚é–“[ãƒŸãƒªç§’]
+			/// </param>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void setDuration(const Array<int32>& duration)
+			{
+				m_duration = duration;
+
+				m_length = 0;
+				for (const auto& d : duration)
+					m_length += d;
+			}
+
+			/// <summary>
+			/// æç”»ã™ã‚‹TextureRegionã‚’å–å¾—ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// æç”»ã™ã‚‹TextureRegion
+			/// </returns>
+			const TextureRegion get() const;
+
+			/// <summary>
+			/// s3d::Texture::draw
+			/// </summary>
+			const RectF draw(const Color& diffuse = Palette::White) const
+			{
+				return get().draw(diffuse);
+			}
+
+			/// <summary>
+			/// s3d::Texture::draw
+			/// </summary>
+			const RectF draw(double x, double y, const Color& diffuse = Palette::White) const
+			{
+				return get().draw(x, y, diffuse);
+			}
+
+			/// <summary>
+			/// s3d::Texture::draw
+			/// </summary>
+			const RectF draw(const Vec2& pos, const Color& diffuse = Palette::White) const
+			{
+				return get().draw(pos, diffuse);
+			}
+
+			/// <summary>
+			/// s3d::Texture::drawAt
+			/// </summary>
+			const RectF drawAt(double x, double y, const Color& diffuse = Palette::White) const
+			{
+				return get().drawAt(x, y, diffuse);
+			}
+
+			/// <summary>
+			/// s3d::Texture::drawAt
+			/// </summary>
+			const RectF drawAt(const Vec2& pos, const Color& diffuse = Palette::White) const
+			{
+				return get().drawAt(pos, diffuse);
+			}
+
+			/// <summary>
+			/// s3d::Texture::operator ()
+			/// </summary>
+			const TextureRegion operator ()(double x, double y, double w, double h) const
+			{
+				return m_data(index() * width + x, y, w, h);
+			}
+
+			/// <summary>
+			/// s3d::Texture::uv
+			/// </summary>
+			const TextureRegion uv(double u, double v, double w, double h) const
+			{
+				return m_data.uv((index() + u) / m_size, v, w / m_size, h);
+			}
+
+			/// <summary>
+			/// s3d::Texture::uv
+			/// </summary>
+			const TextureRegion uv(const RectF& rect) const
+			{
+				return m_data.uv(rect.movedBy(index() * width, 0.0));
+			}
+
+			/// <summary>
+			/// s3d::Texture::mirror
+			/// </summary>
+			const TextureRegion mirrored() const
+			{
+				return get().mirrored();
+			}
+
+			/// <summary>
+			/// s3d::Texture::flip
+			/// </summary>
+			const TextureRegion flipped() const
+			{
+				return get().flipped();
+			}
+
+			/// <summary>
+			/// s3d::Texture::scaling
+			/// </summary>
+			const TextureRegion scaled(double scaling) const
+			{
+				return get().scaled(scaling);
+			}
+
+			/// <summary>
+			/// s3d::Texture::scaling
+			/// </summary>
+			const TextureRegion scaled(double xScaling, double yScaling) const
+			{
+				return get().scaled(xScaling, yScaling);
+			}
+
+			/// <summary>
+			/// s3d::Texture::scaling
+			/// </summary>
+			const TextureRegion scaled(const Vec2& scaling) const
+			{
+				return get().scaled(scaling);
+			}
+
+			/// <summary>
+			/// s3d::Texture::resize
+			/// </summary>
+			const TextureRegion resized(double width, double height) const
+			{
+				return get().resized(width, height);
+			}
+
+			/// <summary>
+			/// s3d::Texture::resize
+			/// </summary>
+			const TextureRegion resized(const Vec2& size) const
+			{
+				return get().resized(size);
+			}
+
+			/// <summary>
+			/// s3d::Texture::rotate
+			/// </summary>
+			const TexturedQuad rotated(double radian) const
+			{
+				return get().rotated(radian);
+			}
+
+			/// <summary>
+			/// s3d::Texture::rotateAt
+			/// </summary>
+			const TexturedQuad rotatedAt(double x, double y, double radian) const
+			{
+				return get().rotatedAt(x, y, radian);
+			}
+
+			/// <summary>
+			/// s3d::Texture::rotateAt
+			/// </summary>
+			const TexturedQuad rotatedAt(const Vec2& pos, double radian) const
+			{
+				return get().rotatedAt(pos, radian);
+			}
+		};
+
+		//////////////////////////////////////////////////
+		//
+		//	Template Specialization
+		//
+		//////////////////////////////////////////////////
+
+		uint32 Anime<Texture>::width() const
 		{
-			if (startImmediately)
-				m_stopwatch.start();
+			return m_data.width() / static_cast<uint32>(m_size);
 		}
 
-		/// <summary>
-		/// s3d::Texture‚©‚çasc::Anime‚ğì¬‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="texture">
-		/// ƒeƒNƒXƒ`ƒƒ
-		/// </param>
-		/// <param name="size">
-		/// ƒeƒNƒXƒ`ƒƒ‚ÉŠÜ‚Ü‚ê‚éƒRƒ}”
-		/// </param>
-		/// <param name="duration">
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <param name="isLoop">
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğƒ‹[ƒv‚³‚¹‚éê‡‚Í true
-		/// </param>
-		/// <param name="startImmediately">
-		/// ‘¦À‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚·‚éê‡‚Í true
-		/// </param>
-		Anime(const Texture& texture, size_t size, const Array<int32>& duration, bool isLoop = true, bool startImmediately = true) :
-			m_texture(texture),
-			m_size(size),
-			m_duration(duration),
-			m_length(0),
-			m_isLoop(isLoop)
+		uint32 Anime<AssetName>::width() const
 		{
-			for (const auto& d : duration)
-				m_length += d;
-
-			if(startImmediately)
-				m_stopwatch.start();
+			return TextureAsset(m_data).width() / static_cast<uint32>(m_size);
 		}
 
-		/// <summary>
-		/// ƒfƒXƒgƒ‰ƒNƒ^
-		/// </summary>
-		virtual ~Anime() = default;
-
-		/// <summary>
-		/// 1ƒRƒ}‚Ì•iƒsƒNƒZƒ‹j
-		/// </summary>
-		__declspec(property(get = _get_width)) uint32 width;
-
-		/// <summary>
-		/// 1ƒRƒ}‚Ì‚‚³iƒsƒNƒZƒ‹j
-		/// </summary>
-		__declspec(property(get = _get_height)) uint32 height;
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒ‚ğƒŠƒŠ[ƒX‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒvƒƒOƒ‰ƒ€‚Ì‚Ù‚©‚ÌêŠ‚Å“¯‚¶ƒeƒNƒXƒ`ƒƒ‚ªg‚í‚ê‚Ä‚¢‚È‚¢ê‡AƒeƒNƒXƒ`ƒƒ‚Ìƒƒ‚ƒŠ‚ğ‰ğ•ú‚µ‚Ü‚·B
-		/// </remarks>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void release() { m_texture.release(); }
-
-		/// <summary>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢‚©‚ğ•Ô‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢ê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </returns>
-		explicit operator bool() const { return !isEmpty(); }
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒƒnƒ“ƒhƒ‹‚Ì ID ‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		Texture::IDType id() const { return m_texture.id(); };
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒ‚ª‹ó‚©‚Ç‚¤‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢ê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </returns>
-		bool isEmpty() const { return m_texture.isEmpty(); };
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void start() { m_stopwatch.start(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ª“®ì’†‚Å‚ ‚é‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªŠJn‚³‚ê‚Ä‚¢‚éA‚Ü‚½‚ÍŠJnŒãˆê’â~’†‚Å‚ ‚éê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </remarks>
-		bool isActive() const noexcept { return m_stopwatch.isRunning(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªˆê’â~’†‚Å‚ ‚é‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªŠJnŒãˆê’â~’†‚Å‚ ‚éê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </remarks>
-		bool isPaused() const noexcept { return m_stopwatch.isPaused(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğˆê’â~‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void pause() { m_stopwatch.pause(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªˆê’â~’†‚Å‚ ‚éê‡AÄŠJ‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void resume() { m_stopwatch.resume(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğ’â~‚µA‰Šúó‘Ô‚ÉƒŠƒZƒbƒg‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void reset() noexcept { m_stopwatch.reset(); }
-
-		/// <summary>
-		/// ‰Šúó‘Ô‚ÉƒŠƒZƒbƒg‚µ‚ÄAƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void restart() { m_stopwatch.restart(); }
-
-		/// <summary>
-		/// ‚PƒRƒ}‚Ì•`‰æŠÔ‚ğİ’è‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="duration">
-		/// 1ƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void setDuration(int32 duration)
+		uint32 Anime<Texture>::height() const
 		{
-			m_duration = Array<int32>(m_size, duration);
-			m_length = m_size * duration;
+			return m_data.height();
 		}
 
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ÌŒo‰ßŠÔ‚ğ•ÏX‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="time">
-		/// V‚µ‚­İ’è‚·‚éŒo‰ßŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
-
-		/// <summary>
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ‚ğİ’è‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="duration">
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void setDuration(const Array<int32>& duration)
+		uint32 Anime<AssetName>::height() const
 		{
-			m_duration = duration;
-
-			m_length = 0;
-			for (const auto& d : duration)
-				m_length += d;
+			return TextureAsset(m_data).height();
 		}
 
-		/// <summary>
-		/// •`‰æ‚·‚éTextureRegion‚ğæ“¾‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// •`‰æ‚·‚éTextureRegion
-		/// </returns>
-		const TextureRegion get() const
+		bool Anime<Texture>::isEmpty() const
 		{
-			return m_texture.uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return m_data.isEmpty();
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(const Color& diffuse = Palette::White) const
+		bool Anime<AssetName>::isEmpty() const
 		{
-			return get().draw(diffuse);
+			return !TextureAsset::IsRegistered(m_data) || TextureAsset(m_data).isEmpty();
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(double x, double y, const Color& diffuse = Palette::White) const
+		const TextureRegion Anime<Texture>::get() const
 		{
-			return get().draw(x, y, diffuse);
+			return m_data.uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(const Vec2& pos, const Color& diffuse = Palette::White) const
+		const TextureRegion Anime<AssetName>::get() const
 		{
-			return get().draw(pos, diffuse);
+			return TextureAsset(m_data).uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
 		}
+	}
 
-		/// <summary>
-		/// s3d::Texture::drawAt
-		/// </summary>
-		const RectF drawAt(double x, double y, const Color& diffuse = Palette::White) const
-		{
-			return get().drawAt(x, y, diffuse);
-		}
+	/// <summary>
+	/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+	/// </summary>
+	using Anime = detail::Anime<Texture>;
 
-		/// <summary>
-		/// s3d::Texture::drawAt
-		/// </summary>
-		const RectF drawAt(const Vec2& pos, const Color& diffuse = Palette::White) const
-		{
-			return get().drawAt(pos, diffuse);
-		}
-
-		/// <summary>
-		/// s3d::Texture::operator ()
-		/// </summary>
-		const TextureRegion operator ()(double x, double y, double w, double h) const
-		{
-			return m_texture(index() * width + x, y, w, h);
-		}
-
-		/// <summary>
-		/// s3d::Texture::uv
-		/// </summary>
-		const TextureRegion uv(double u, double v, double w, double h) const
-		{
-			return m_texture.uv((index() + u) / m_size, v, w / m_size, h);
-		}
-
-		/// <summary>
-		/// s3d::Texture::uv
-		/// </summary>
-		const TextureRegion uv(const RectF& rect) const
-		{
-			return m_texture.uv(rect.movedBy(index() * width, 0.0));
-		}
-
-		/// <summary>
-		/// s3d::Texture::mirror
-		/// </summary>
-		const TextureRegion mirrored() const
-		{
-			return get().mirrored();
-		}
-
-		/// <summary>
-		/// s3d::Texture::flip
-		/// </summary>
-		const TextureRegion flipped() const
-		{
-			return get().flipped();
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scaled(double scaling) const
-		{
-			return get().scaled(scaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scaled(double xScaling, double yScaling) const
-		{
-			return get().scaled(xScaling, yScaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scaled(const Vec2& scaling) const
-		{
-			return get().scaled(scaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::resize
-		/// </summary>
-		const TextureRegion resized(double width, double height) const
-		{
-			return get().resized(width, height);
-		}
-
-		/// <summary>
-		/// s3d::Texture::resize
-		/// </summary>
-		const TextureRegion resized(const Vec2& size) const
-		{
-			return get().resized(size);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotate
-		/// </summary>
-		const TexturedQuad rotated(double radian) const
-		{
-			return get().rotated(radian);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotateAt
-		/// </summary>
-		const TexturedQuad rotatedAt(double x, double y, double radian) const
-		{
-			return get().rotatedAt(x, y, radian);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotateAt
-		/// </summary>
-		const TexturedQuad rotatedAt(const Vec2& pos, double radian) const
-		{
-			return get().rotatedAt(pos, radian);
-		}
-
-		uint32 _get_width() const { return m_texture.width() / static_cast<uint32>(m_size); }
-
-		uint32 _get_height() const { return m_texture.height(); }
-	};
+	/// <summary>
+	/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+	/// </summary>
+	/// <remarks>
+	/// Anime ã¨é•ã„ TextureAsset ã«ç™»éŒ²ã•ã‚ŒãŸ Texture ã‚’ä½¿ç”¨ã—ã¾ã™.
+	/// </remarks>
+	using AnimeAsset = detail::Anime<AssetName>;
 }
