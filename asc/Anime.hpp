@@ -16,11 +16,11 @@ namespace asc
 		{
 		private:
 
-			TextureData m_data;
+			SecondsF m_elapsedTime;
 
 			Array<SecondsF> m_durations;
 
-			SecondsF m_elapsedTime;
+			TextureData m_data;
 
 			bool m_isLoop;
 
