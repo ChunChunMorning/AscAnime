@@ -172,6 +172,7 @@ namespace asc
 			/// </returns>
 			void release()
 			{
+				m_durations.release();
 				m_data.release();
 			}
 
