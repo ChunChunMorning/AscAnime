@@ -38,7 +38,7 @@ namespace asc
 				m_elapsedTime = SecondsF(Math::Fmod(elapsedTime.count(), animationLength.count()));
 			}
 
-			size_t index() const
+			size_t currentTextureIndex() const
 			{
 				auto animationTime = m_elapsedTime;
 
@@ -231,7 +231,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion operator ()(double x, double y, double w, double h) const
 			{
-				return m_data(index() * width + x, y, w, h);
+				return m_data(currentTextureIndex() * width + x, y, w, h);
 			}
 
 			/// <summary>
@@ -239,7 +239,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion uv(double u, double v, double w, double h) const
 			{
-				return m_data.uv((index() + u) / m_durations.size(), v, w / m_durations.size(), h);
+				return m_data.uv((currentTextureIndex() + u) / m_durations.size(), v, w / m_durations.size(), h);
 			}
 
 			/// <summary>
@@ -247,7 +247,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion uv(const RectF& rect) const
 			{
-				return m_data.uv(rect.movedBy(index() * width, 0.0));
+				return m_data.uv(rect.movedBy(currentTextureIndex() * width, 0.0));
 			}
 
 			/// <summary>
@@ -369,12 +369,12 @@ namespace asc
 
 		const TextureRegion Anime<Texture>::textureRegion() const
 		{
-			return m_data.uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
+			return m_data.uv(static_cast<double>(currentTextureIndex()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
 		const TextureRegion Anime<AssetName>::textureRegion() const
 		{
-			return TextureAsset(m_data).uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
+			return TextureAsset(m_data).uv(static_cast<double>(currentTextureIndex()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 	}
 
