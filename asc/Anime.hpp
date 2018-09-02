@@ -38,11 +38,11 @@ namespace asc
 				m_elapsedTime = SecondsF(Math::Fmod(elapsedTime.count(), animationLength.count()));
 			}
 
-			uint32 index() const
+			size_t index() const
 			{
 				auto animationTime = m_elapsedTime;
 
-				for (uint32 index = 0; index < m_durations.size(); ++index)
+				for (size_t index = 0; index < m_durations.size(); ++index)
 				{
 					if (animationTime < m_durations[index])
 					{
