@@ -109,30 +109,6 @@ namespace asc
 				m_isLoop(isLoop) {}
 
 			/// <summary>
-			/// 1コマの幅（ピクセル）
-			/// </summary>
-			uint32 width() const;
-
-			/// <summary>
-			/// 1コマの高さ（ピクセル）
-			/// </summary>
-			uint32 height() const;
-
-			/// <summary>
-			/// 内部のテクスチャをリリースします。
-			/// </summary>
-			/// <remarks>
-			/// プログラムのほかの場所で同じテクスチャが使われていない場合、テクスチャのメモリを解放します。
-			/// </remarks>
-			/// <returns>
-			/// なし
-			/// </returns>
-			void release()
-			{
-				m_data.release();
-			}
-
-			/// <summary>
 			/// テクスチャが空ではないかを返します。
 			/// </summary>
 			/// <returns>
@@ -148,14 +124,27 @@ namespace asc
 			/// </returns>
 			bool isEmpty() const;
 
-			void update(double seconds)
-			{
-				update(SecondsF(seconds));
-			}
+			/// <summary>
+			/// 1コマの幅（ピクセル）
+			/// </summary>
+			uint32 width() const;
 
-			void update(SecondsF deltaTime)
+			/// <summary>
+			/// 1コマの高さ（ピクセル）
+			/// </summary>
+			uint32 height() const;
+
+			/// <summary>
+			/// 描画するTextureRegionを取得します。
+			/// </summary>
+			/// <returns>
+			/// 描画するTextureRegion
+			/// </returns>
+			const TextureRegion textureRegion() const;
+
+			SecondsF elapsedTime() const
 			{
-				updateElapsedTime(m_elapsedTime + deltaTime);
+				return m_elapsedTime;
 			}
 
 			/// <summary>
@@ -167,25 +156,41 @@ namespace asc
 			/// <returns>
 			/// なし
 			/// </returns>
-			void set(SecondsF time) noexcept
+			void setElapsedTime(SecondsF time) noexcept
 			{
 				updateElapsedTime(time);
 			}
 
 			/// <summary>
-			/// 描画するTextureRegionを取得します。
+			/// 内部のテクスチャをリリースします。
 			/// </summary>
+			/// <remarks>
+			/// プログラムのほかの場所で同じテクスチャが使われていない場合、テクスチャのメモリを解放します。
+			/// </remarks>
 			/// <returns>
-			/// 描画するTextureRegion
+			/// なし
 			/// </returns>
-			const TextureRegion get() const;
+			void release()
+			{
+				m_data.release();
+			}
+
+			void update(double seconds)
+			{
+				update(SecondsF(seconds));
+			}
+
+			void update(SecondsF deltaTime)
+			{
+				updateElapsedTime(m_elapsedTime + deltaTime);
+			}
 
 			/// <summary>
 			/// s3d::Texture::draw
 			/// </summary>
 			const RectF draw(const Color& diffuse = Palette::White) const
 			{
-				return get().draw(diffuse);
+				return textureRegion().draw(diffuse);
 			}
 
 			/// <summary>
@@ -193,7 +198,7 @@ namespace asc
 			/// </summary>
 			const RectF draw(double x, double y, const Color& diffuse = Palette::White) const
 			{
-				return get().draw(x, y, diffuse);
+				return textureRegion().draw(x, y, diffuse);
 			}
 
 			/// <summary>
@@ -201,7 +206,7 @@ namespace asc
 			/// </summary>
 			const RectF draw(const Vec2& pos, const Color& diffuse = Palette::White) const
 			{
-				return get().draw(pos, diffuse);
+				return textureRegion().draw(pos, diffuse);
 			}
 
 			/// <summary>
@@ -209,7 +214,7 @@ namespace asc
 			/// </summary>
 			const RectF drawAt(double x, double y, const Color& diffuse = Palette::White) const
 			{
-				return get().drawAt(x, y, diffuse);
+				return textureRegion().drawAt(x, y, diffuse);
 			}
 
 			/// <summary>
@@ -217,7 +222,7 @@ namespace asc
 			/// </summary>
 			const RectF drawAt(const Vec2& pos, const Color& diffuse = Palette::White) const
 			{
-				return get().drawAt(pos, diffuse);
+				return textureRegion().drawAt(pos, diffuse);
 			}
 
 			/// <summary>
@@ -249,7 +254,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion mirrored() const
 			{
-				return get().mirrored();
+				return textureRegion().mirrored();
 			}
 
 			/// <summary>
@@ -257,7 +262,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion flipped() const
 			{
-				return get().flipped();
+				return textureRegion().flipped();
 			}
 
 			/// <summary>
@@ -265,7 +270,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion scaled(double scaling) const
 			{
-				return get().scaled(scaling);
+				return textureRegion().scaled(scaling);
 			}
 
 			/// <summary>
@@ -273,7 +278,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion scaled(double xScaling, double yScaling) const
 			{
-				return get().scaled(xScaling, yScaling);
+				return textureRegion().scaled(xScaling, yScaling);
 			}
 
 			/// <summary>
@@ -281,7 +286,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion scaled(const Vec2& scaling) const
 			{
-				return get().scaled(scaling);
+				return textureRegion().scaled(scaling);
 			}
 
 			/// <summary>
@@ -289,7 +294,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion resized(double width, double height) const
 			{
-				return get().resized(width, height);
+				return textureRegion().resized(width, height);
 			}
 
 			/// <summary>
@@ -297,7 +302,7 @@ namespace asc
 			/// </summary>
 			const TextureRegion resized(const Vec2& size) const
 			{
-				return get().resized(size);
+				return textureRegion().resized(size);
 			}
 
 			/// <summary>
@@ -305,7 +310,7 @@ namespace asc
 			/// </summary>
 			const TexturedQuad rotated(double radian) const
 			{
-				return get().rotated(radian);
+				return textureRegion().rotated(radian);
 			}
 
 			/// <summary>
@@ -313,7 +318,7 @@ namespace asc
 			/// </summary>
 			const TexturedQuad rotatedAt(double x, double y, double radian) const
 			{
-				return get().rotatedAt(x, y, radian);
+				return textureRegion().rotatedAt(x, y, radian);
 			}
 
 			/// <summary>
@@ -321,7 +326,7 @@ namespace asc
 			/// </summary>
 			const TexturedQuad rotatedAt(const Vec2& pos, double radian) const
 			{
-				return get().rotatedAt(pos, radian);
+				return textureRegion().rotatedAt(pos, radian);
 			}
 		};
 
@@ -361,12 +366,12 @@ namespace asc
 			return !TextureAsset::IsRegistered(m_data) || TextureAsset(m_data).isEmpty();
 		}
 
-		const TextureRegion Anime<Texture>::get() const
+		const TextureRegion Anime<Texture>::textureRegion() const
 		{
 			return m_data.uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
-		const TextureRegion Anime<AssetName>::get() const
+		const TextureRegion Anime<AssetName>::textureRegion() const
 		{
 			return TextureAsset(m_data).uv(static_cast<double>(index()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
