@@ -38,7 +38,7 @@ void Main()
 
 		animeAsset.update((slow ? 0.2 : 1.0) * System::DeltaTime());
 
-		anime.draw(Cursor::Pos());
-		animeAsset.draw(50, 70);
+		anime.textureRegion().draw(Cursor::Pos());
+		animeAsset.textureRegion().draw(50, 70);
 	}
 }
