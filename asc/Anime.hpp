@@ -1,418 +1,412 @@
-# pragma once
+ï»¿# pragma once
+
 # include <Siv3D.hpp>
 
 namespace asc
 {
 	using namespace s3d;
 
-	/// <summary>
-	/// ƒpƒ‰ƒpƒ‰–Ÿ‰æ‚Ì‚æ‚¤‚ÈƒAƒjƒ[ƒVƒ‡ƒ“
-	/// </summary>
-	class Anime
+	namespace detail
 	{
-
-	private:
-
-		Texture m_texture;
-
-		size_t m_size;
-
-		Array<int32> m_duration;
-
-		Stopwatch m_stopwatch;
-
-		int32 m_length;
-
-		bool m_isLoop;
-
-		uint32 index() const
+		/// <summary>
+		/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+		/// </summary>
+		template<class TextureData>
+		class Anime
 		{
-			auto ms = m_isLoop ?
-				m_stopwatch.ms() % m_length :
-				Min(m_stopwatch.ms(), m_length);
-			auto currentIndex = 0;
+		private:
 
-			while (ms > m_duration[currentIndex])
+			SecondsF m_elapsedTime;
+
+			size_t m_index;
+
+			Array<SecondsF> m_durations;
+
+			TextureData m_data;
+
+			bool m_isLoop;
+
+			void updateIndexAndElapsedTime(SecondsF deltaTime);
+
+			void updateForwardIndexAndElapsedTime(SecondsF deltaTime);
+
+			void updateReverseIndexAndElapsedTime(SecondsF deltaTime);
+
+		public:
+
+			/// <summary>
+			/// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+			/// </summary>
+			Anime() = default;
+
+			/// <summary>
+			/// Textureã‹ã‚‰ Anime ã‚’ä½œæˆã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="texture">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+			/// </param>
+			/// <param name="size">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ã«å«ã¾ã‚Œã‚‹ã‚³ãƒæ•°
+			/// </param>
+			/// <param name="duration">
+			/// 1ã‚³ãƒã®æç”»æ™‚é–“
+			/// </param>
+			/// <param name="isLoop">
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ãƒ«ãƒ¼ãƒ—ã•ã›ã‚‹å ´åˆã¯ true
+			/// </param>
+			Anime(const TextureData& texture, size_t size, SecondsF duration, bool isLoop = true) :
+				Anime(texture, Array<SecondsF>(size, duration), isLoop) {}
+
+			/// <summary>
+			/// Texture ã‹ã‚‰ Anime ã‚’ä½œæˆã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="texture">
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+			/// </param>
+			/// <param name="duration">
+			/// å„ã‚³ãƒã®æç”»æ™‚é–“
+			/// </param>
+			/// <param name="isLoop">
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ãƒ«ãƒ¼ãƒ—ã•ã›ã‚‹å ´åˆã¯ true
+			/// </param>
+			/// <remarks>
+			/// ãƒ†ã‚¯ã‚¹ãƒãƒ£ã«å«ã¾ã‚Œã‚‹ã‚³ãƒæ•°ã¨ durations.size() ãŒä¸€è‡´ã™ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚
+			/// </remarks>
+			Anime(const TextureData& texture, const Array<SecondsF>& durations, bool isLoop = true) :
+				m_elapsedTime(0.0s),
+				m_index(0u),
+				m_durations(durations),
+				m_data(texture),
+				m_isLoop(isLoop)
 			{
-				ms -= m_duration[currentIndex];
-				currentIndex++;
+				assert(m_durations.all([](SecondsF e) { return e > 0.0s; }));
 			}
 
-			return currentIndex;
-		}
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒç©ºã§ã¯ãªã„ã‹ã‚’è¿”ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒç©ºã§ã¯ãªã„å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </returns>
+			[[nodiscard]] explicit operator bool() const
+			{
+				return !isEmpty();
+			}
 
-	public:
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒç©ºã‹ã©ã†ã‹ã‚’ç¤ºã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãŒç©ºã§ã¯ãªã„å ´åˆ true, ãã‚Œä»¥å¤–ã®å ´åˆã¯ false
+			/// </returns>
+			[[nodiscard]] bool isEmpty() const;
 
-		/// <summary>
-		/// ƒfƒtƒHƒ‹ƒgƒRƒ“ƒXƒgƒ‰ƒNƒ^
-		/// </summary>
-		Anime() = default;
+			/// <summary>
+			/// 1 ã‚³ãƒã®å¹…ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰
+			/// </summary>
+			[[nodiscard]] uint32 width() const;
 
-		/// <summary>
-		/// s3d::Texture‚©‚çasc::Anime‚ğì¬‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="texture">
-		/// ƒeƒNƒXƒ`ƒƒ
-		/// </param>
-		/// <param name="size">
-		/// ƒeƒNƒXƒ`ƒƒ‚ÉŠÜ‚Ü‚ê‚éƒRƒ}”
-		/// </param>
-		/// <param name="duration">
-		/// 1ƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <param name="isLoop">
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğƒ‹[ƒv‚³‚¹‚éê‡‚Í true
-		/// </param>
-		/// <param name="startImmediately">
-		/// ‘¦À‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚·‚éê‡‚Í true
-		/// </param>
-		Anime(const Texture& texture, size_t size, int32 duration, bool isLoop = true, bool startImmediately = true) :
-			m_texture(texture),
-			m_size(size),
-			m_duration(size, duration),
-			m_length(size * duration),
-			m_isLoop(isLoop)
+			/// <summary>
+			/// 1 ã‚³ãƒã®é«˜ã•ï¼ˆãƒ”ã‚¯ã‚»ãƒ«ï¼‰
+			/// </summary>
+			[[nodiscard]] uint32 height() const;
+
+			/// <summary>
+			/// æç”»ã™ã‚‹ TextureRegion ã‚’å–å¾—ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// æç”»ã™ã‚‹ TextureRegion
+			/// </returns>
+			[[nodiscard]] const TextureRegion textureRegion() const;
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®çµŒéæ™‚é–“ã‚’å–å¾—ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// first -> ã‚³ãƒæ•°, second -> ãã®ã‚³ãƒã§ã®çµŒéæ™‚é–“
+			/// </returns>
+			[[nodiscard]] std::pair<size_t, SecondsF> elapsedTime() const
+			{
+				return { m_index, m_elapsedTime };
+			}
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®çµŒéæ™‚é–“ã‚’å¤‰æ›´ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="index">
+			/// æ–°ã—ãè¨­å®šã™ã‚‹ã‚³ãƒ
+			/// </param>
+			/// <param name="elapsedTime">
+			/// æ–°ã—ãè¨­å®šã™ã‚‹ã‚³ãƒã§ã®çµŒéæ™‚é–“
+			/// </param>
+			/// <returns>
+			/// first -> ã‚³ãƒæ•°, second -> ãã®ã‚³ãƒã§ã®çµŒéæ™‚é–“
+			/// </returns>
+			std::pair<size_t, SecondsF> setElapsedTime(size_t index, SecondsF elapsedTime) noexcept
+			{
+				m_index = index;
+				m_elapsedTime = 0.0s;
+
+				updateIndexAndElapsedTime(elapsedTime);
+
+				return { m_index, m_elapsedTime };
+			}
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ãƒªãƒªãƒ¼ã‚¹ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void release()
+			{
+				m_durations.release();
+				m_data.release();
+			}
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®æ™‚é–“ã‚’æ›´æ–°ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="deltaTime">
+			/// é€²ã‚ã‚‹æ™‚é–“
+			/// </param>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void update(double deltaTime)
+			{
+				update(SecondsF(deltaTime));
+			}
+
+			/// <summary>
+			/// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®æ™‚é–“ã‚’æ›´æ–°ã—ã¾ã™ã€‚
+			/// </summary>
+			/// <param name="deltaTime">
+			/// é€²ã‚ã‚‹æ™‚é–“
+			/// </param>
+			/// <returns>
+			/// ãªã—
+			/// </returns>
+			void update(SecondsF deltaTime)
+			{
+				updateIndexAndElapsedTime(deltaTime);
+			}
+
+			/// <summary>
+			/// TextureRegion::draw
+			/// </summary>
+			template<class ...Args>
+			RectF draw(Args&&... args) const
+			{
+				return textureRegion().draw(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::drawClipped
+			/// </summary>
+			template<class ...Args>
+			RectF drawClipped(Args&&... args) const
+			{
+				return textureRegion().drawClipped(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::drawAt
+			/// </summary>
+			template<class... Args>
+			RectF drawAt(Args&&... args) const
+			{
+				return textureRegion().drawAt(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::drawAtClipped
+			/// </summary>
+			template<class... Args>
+			RectF drawAtClipped(Args&&... args) const
+			{
+				return textureRegion().drawAtClipped(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::mirrored
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TextureRegion mirrored(Args&&... args) const
+			{
+				return textureRegion().mirrored(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::flipped
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TextureRegion flipped(Args&&... args) const
+			{
+				return textureRegion().flipped(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::scaled
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TextureRegion scaled(Args&&... args) const
+			{
+				return textureRegion().scaled(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::resized
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TextureRegion resized(Args&&... args) const
+			{
+				return textureRegion().resized(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::fitted
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TextureRegion fitted(Args&&... args) const
+			{
+				return textureRegion().fitted(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::rotated
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TexturedQuad rotated(Args&&... args) const
+			{
+				return textureRegion().rotated(std::forward<Args>(args)...);
+			}
+
+			/// <summary>
+			/// TextureRegion::rotatedAt
+			/// </summary>
+			template<class... Args>
+			[[nodiscard]] TexturedQuad rotatedAt(double x, double y, double angle) const
+			{
+				return TextureRegion().rotatedAt(std::forward<Args>(args)...);
+			}
+		};
+
+		//////////////////////////////////////////////////
+		//
+		//	Template Implementation
+		//
+		//////////////////////////////////////////////////
+
+		template<class TextureData>
+		void Anime<TextureData>::updateIndexAndElapsedTime(SecondsF deltaTime)
 		{
-			if (startImmediately)
-				m_stopwatch.start();
+			deltaTime >= 0.0s ? updateForwardIndexAndElapsedTime(deltaTime) : updateReverseIndexAndElapsedTime(deltaTime);
 		}
 
-		/// <summary>
-		/// s3d::Texture‚©‚çasc::Anime‚ğì¬‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="texture">
-		/// ƒeƒNƒXƒ`ƒƒ
-		/// </param>
-		/// <param name="size">
-		/// ƒeƒNƒXƒ`ƒƒ‚ÉŠÜ‚Ü‚ê‚éƒRƒ}”
-		/// </param>
-		/// <param name="duration">
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <param name="isLoop">
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğƒ‹[ƒv‚³‚¹‚éê‡‚Í true
-		/// </param>
-		/// <param name="startImmediately">
-		/// ‘¦À‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚·‚éê‡‚Í true
-		/// </param>
-		Anime(const Texture& texture, size_t size, const Array<int32>& duration, bool isLoop = true, bool startImmediately = true) :
-			m_texture(texture),
-			m_size(size),
-			m_duration(duration),
-			m_length(0),
-			m_isLoop(isLoop)
+		template<class TextureData>
+		void Anime<TextureData>::updateForwardIndexAndElapsedTime(SecondsF deltaTime)
 		{
-			for (const auto& d : duration)
-				m_length += d;
+			assert(deltaTime >= 0.0s);
 
-			if(startImmediately)
-				m_stopwatch.start();
+			m_elapsedTime += deltaTime;
+
+			assert(!isEmpty());
+
+			while (m_elapsedTime > m_durations[m_index])
+			{
+				if (!m_isLoop && m_index + 1 == m_durations.size())
+				{
+					m_elapsedTime = m_durations[m_index];
+
+					break;
+				}
+
+				m_elapsedTime -= m_durations[m_index];
+				m_index = (m_index + 1) % m_durations.size();
+			}
 		}
 
-		/// <summary>
-		/// ƒfƒXƒgƒ‰ƒNƒ^
-		/// </summary>
-		virtual ~Anime() = default;
-
-		/// <summary>
-		/// 1ƒRƒ}‚Ì•iƒsƒNƒZƒ‹j
-		/// </summary>
-		__declspec(property(get = _get_width)) uint32 width;
-
-		/// <summary>
-		/// 1ƒRƒ}‚Ì‚‚³iƒsƒNƒZƒ‹j
-		/// </summary>
-		__declspec(property(get = _get_height)) uint32 height;
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒ‚ğƒŠƒŠ[ƒX‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒvƒƒOƒ‰ƒ€‚Ì‚Ù‚©‚ÌêŠ‚Å“¯‚¶ƒeƒNƒXƒ`ƒƒ‚ªg‚í‚ê‚Ä‚¢‚È‚¢ê‡AƒeƒNƒXƒ`ƒƒ‚Ìƒƒ‚ƒŠ‚ğ‰ğ•ú‚µ‚Ü‚·B
-		/// </remarks>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void release() { m_texture.release(); }
-
-		/// <summary>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢‚©‚ğ•Ô‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢ê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </returns>
-		explicit operator bool() const { return !isEmpty(); }
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒƒnƒ“ƒhƒ‹‚Ì ID ‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		HandleIDType id() const { return m_texture.id(); };
-
-		/// <summary>
-		/// “à•”‚ÌƒeƒNƒXƒ`ƒƒ‚ª‹ó‚©‚Ç‚¤‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ƒeƒNƒXƒ`ƒƒ‚ª‹ó‚Å‚Í‚È‚¢ê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </returns>
-		bool isEmpty() const { return m_texture.isEmpty(); };
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void start() { m_stopwatch.start(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ª“®ì’†‚Å‚ ‚é‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªŠJn‚³‚ê‚Ä‚¢‚éA‚Ü‚½‚ÍŠJnŒãˆê’â~’†‚Å‚ ‚éê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </remarks>
-		bool isActive() const noexcept { return m_stopwatch.isActive(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªˆê’â~’†‚Å‚ ‚é‚©‚ğ¦‚µ‚Ü‚·B
-		/// </summary>
-		/// <remarks>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªŠJnŒãˆê’â~’†‚Å‚ ‚éê‡ true, ‚»‚êˆÈŠO‚Ìê‡‚Í false
-		/// </remarks>
-		bool isPaused() const noexcept { return m_stopwatch.isPaused(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğˆê’â~‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void pause() { m_stopwatch.pause(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ªˆê’â~’†‚Å‚ ‚éê‡AÄŠJ‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void resume() { m_stopwatch.resume(); }
-
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ğ’â~‚µA‰Šúó‘Ô‚ÉƒŠƒZƒbƒg‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void reset() noexcept { m_stopwatch.reset(); }
-
-		/// <summary>
-		/// ‰Šúó‘Ô‚ÉƒŠƒZƒbƒg‚µ‚ÄAƒAƒjƒ[ƒVƒ‡ƒ“‚ğŠJn‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void restart() { m_stopwatch.restart(); }
-
-		/// <summary>
-		/// ‚PƒRƒ}‚Ì•`‰æŠÔ‚ğİ’è‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="duration">
-		/// 1ƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void setDuration(int32 duration)
+		template<class TextureData>
+		void Anime<TextureData>::updateReverseIndexAndElapsedTime(SecondsF deltaTime)
 		{
-			m_duration = Array<int32>(m_size, duration);
-			m_length = m_size * duration;
+			assert(deltaTime < 0.0s);
+
+			m_elapsedTime += deltaTime;
+
+			assert(!isEmpty());
+
+			while (m_elapsedTime < 0.0s)
+			{
+				if (!m_isLoop && m_index == 0)
+				{
+					m_elapsedTime = 0.0s;
+
+					break;
+				}
+
+				m_elapsedTime += m_durations[m_index];
+				m_index = (m_durations.size() + m_index - 1) % m_durations.size();
+			}
 		}
 
-		/// <summary>
-		/// ƒAƒjƒ[ƒVƒ‡ƒ“‚ÌŒo‰ßŠÔ‚ğ•ÏX‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="time">
-		/// V‚µ‚­İ’è‚·‚éŒo‰ßŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void set(int32 time) { m_stopwatch.set(MicrosecondsF(time)); }
+		//////////////////////////////////////////////////
+		//
+		//	Template Specialization
+		//
+		//////////////////////////////////////////////////
 
-		/// <summary>
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ‚ğİ’è‚µ‚Ü‚·B
-		/// </summary>
-		/// <param name="duration">
-		/// ŠeƒRƒ}‚Ì•`‰æŠÔ[ƒ~ƒŠ•b]
-		/// </param>
-		/// <returns>
-		/// ‚È‚µ
-		/// </returns>
-		void setDuration(const Array<int32>& duration)
+		uint32 Anime<Texture>::width() const
 		{
-			m_duration = duration;
-
-			m_length = 0;
-			for (const auto& d : duration)
-				m_length += d;
+			return m_data.width() / static_cast<uint32>(m_durations.size());
 		}
 
-		/// <summary>
-		/// •`‰æ‚·‚éTextureRegion‚ğæ“¾‚µ‚Ü‚·B
-		/// </summary>
-		/// <returns>
-		/// •`‰æ‚·‚éTextureRegion
-		/// </returns>
-		const TextureRegion get() const
+		uint32 Anime<AssetName>::width() const
 		{
-			return m_texture.uv(static_cast<double>(index()) / m_size, 0.0, 1.0 / m_size, 1.0);
+			return TextureAsset(m_data).width() / static_cast<uint32>(m_durations.size());
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(const Color& diffuse = Palette::White) const
+		uint32 Anime<Texture>::height() const
 		{
-			return get().draw(diffuse);
+			return m_data.height();
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(double x, double y, const Color& diffuse = Palette::White) const
+		uint32 Anime<AssetName>::height() const
 		{
-			return get().draw(x, y, diffuse);
+			return TextureAsset(m_data).height();
 		}
 
-		/// <summary>
-		/// s3d::Texture::draw
-		/// </summary>
-		const RectF draw(const Vec2& pos, const Color& diffuse = Palette::White) const
+		bool Anime<Texture>::isEmpty() const
 		{
-			return get().draw(pos, diffuse);
+			return  m_durations.isEmpty() || m_data.isEmpty();
 		}
 
-		/// <summary>
-		/// s3d::Texture::drawAt
-		/// </summary>
-		const RectF drawAt(double x, double y, const Color& diffuse = Palette::White) const
+		bool Anime<AssetName>::isEmpty() const
 		{
-			return get().drawAt(x, y, diffuse);
+			return !TextureAsset::IsRegistered(m_data) || TextureAsset(m_data).isEmpty();
 		}
 
-		/// <summary>
-		/// s3d::Texture::drawAt
-		/// </summary>
-		const RectF drawAt(const Vec2& pos, const Color& diffuse = Palette::White) const
+		const TextureRegion Anime<Texture>::textureRegion() const
 		{
-			return get().drawAt(pos, diffuse);
+			return m_data.uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
-		/// <summary>
-		/// s3d::Texture::operator ()
-		/// </summary>
-		const TextureRegion operator ()(double x, double y, double w, double h) const
+		const TextureRegion Anime<AssetName>::textureRegion() const
 		{
-			return m_texture(index() * width + x, y, w, h);
+			return TextureAsset(m_data).uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
+	}
 
-		/// <summary>
-		/// s3d::Texture::uv
-		/// </summary>
-		const TextureRegion uv(double u, double v, double w, double h) const
-		{
-			return m_texture.uv((index() + u) / m_size, v, w / m_size, h);
-		}
+	/// <summary>
+	/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+	/// </summary>
+	using Anime = detail::Anime<Texture>;
 
-		/// <summary>
-		/// s3d::Texture::uv
-		/// </summary>
-		const TextureRegion uv(const RectF& rect) const
-		{
-			return m_texture.uv(rect.movedBy(index() * width, 0.0));
-		}
-
-		/// <summary>
-		/// s3d::Texture::mirror
-		/// </summary>
-		const TextureRegion mirror() const
-		{
-			return get().mirror();
-		}
-
-		/// <summary>
-		/// s3d::Texture::flip
-		/// </summary>
-		const TextureRegion flip() const
-		{
-			return get().flip();
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scale(double scaling) const
-		{
-			return get().scale(scaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scale(double xScaling, double yScaling) const
-		{
-			return get().scale(xScaling, yScaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::scaling
-		/// </summary>
-		const TextureRegion scale(const Vec2& scaling) const
-		{
-			return get().scale(scaling);
-		}
-
-		/// <summary>
-		/// s3d::Texture::resize
-		/// </summary>
-		const TextureRegion resize(double width, double height) const
-		{
-			return get().resize(width, height);
-		}
-
-		/// <summary>
-		/// s3d::Texture::resize
-		/// </summary>
-		const TextureRegion resize(const Vec2& size) const
-		{
-			return get().resize(size);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotate
-		/// </summary>
-		const TexturedQuad rotate(double radian) const
-		{
-			return get().rotate(radian);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotateAt
-		/// </summary>
-		const TexturedQuad rotateAt(double x, double y, double radian) const
-		{
-			return get().rotateAt(x, y, radian);
-		}
-
-		/// <summary>
-		/// s3d::Texture::rotateAt
-		/// </summary>
-		const TexturedQuad rotateAt(const Vec2& pos, double radian) const
-		{
-			return get().rotateAt(pos, radian);
-		}
-
-		uint32 _get_width() const { return m_texture.width / static_cast<uint32>(m_size); }
-
-		uint32 _get_height() const { return m_texture.height; }
-	};
+	/// <summary>
+	/// ãƒ‘ãƒ©ãƒ‘ãƒ©æ¼«ç”»ã®ã‚ˆã†ãªã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+	/// </summary>
+	/// <remarks>
+	/// Anime ã¨é•ã„ TextureAsset ã«ç™»éŒ²ã•ã‚ŒãŸ Texture ã‚’ä½¿ç”¨ã—ã¾ã™.
+	/// </remarks>
+	using AnimeAsset = detail::Anime<AssetName>;
 }
