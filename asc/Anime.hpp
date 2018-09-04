@@ -182,6 +182,72 @@ namespace asc
 			{
 				updateIndexAndElapsedTime(deltaTime);
 			}
+
+			template<class ...Args>
+			RectF draw(Args&&... args) const
+			{
+				return textureRegion().draw(std::forward<Args>(args)...);
+			}
+
+			template<class ...Args>
+			RectF drawClipped(Args&&... args) const
+			{
+				return textureRegion().drawClipped(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			RectF drawAt(Args&&... args) const
+			{
+				return textureRegion().drawAt(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			RectF drawAtClipped(Args&&... args) const
+			{
+				return textureRegion().drawAtClipped(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TextureRegion mirrored(Args&&... args) const
+			{
+				return textureRegion().mirrored(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TextureRegion flipped(Args&&... args) const
+			{
+				return textureRegion().flipped(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TextureRegion scaled(Args&&... args) const
+			{
+				return textureRegion().scaled(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TextureRegion resized(Args&&... args) const
+			{
+				return textureRegion().resized(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TextureRegion fitted(Args&&... args) const
+			{
+				return textureRegion().fitted(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TexturedQuad rotated(Args&&... args) const
+			{
+				return textureRegion().rotated(std::forward<Args>(args)...);
+			}
+
+			template<class... Args>
+			[[nodiscard]] TexturedQuad rotatedAt(double x, double y, double angle) const
+			{
+				return TextureRegion().rotatedAt(std::forward<Args>(args)...);
+			}
 		};
 
 		//////////////////////////////////////////////////

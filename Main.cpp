@@ -38,7 +38,7 @@ void Main()
 
 		animeAsset.update((slow ? 0.2 : 1.0) * System::DeltaTime());
 
-		anime.textureRegion().draw(Cursor::Pos());
-		animeAsset.textureRegion().draw(50, 70);
+		anime.mirrored().draw(Arg::topLeft = Point(50, 70));
+		animeAsset.draw(Arg::center = Cursor::Pos());
 	}
 }
