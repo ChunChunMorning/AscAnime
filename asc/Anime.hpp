@@ -207,7 +207,7 @@ namespace asc
 
 		bool Anime<Texture>::isEmpty() const
 		{
-			return m_data.isEmpty();
+			return  m_durations.isEmpty() || m_data.isEmpty();
 		}
 
 		bool Anime<AssetName>::isEmpty() const
