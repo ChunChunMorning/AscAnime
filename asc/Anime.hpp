@@ -18,43 +18,30 @@ namespace asc
 
 			SecondsF m_elapsedTime;
 
+			size_t m_index;
+
 			Array<SecondsF> m_durations;
 
 			TextureData m_data;
 
 			bool m_isLoop;
 
-			void updateElapsedTime(SecondsF elapsedTime)
+			void updateIndexAndElapsedTime(SecondsF deltaTime)
 			{
-				const auto animationLength = m_durations.sum();
+				m_elapsedTime += deltaTime;
 
-				if (!m_isLoop)
+				while (m_elapsedTime > m_durations[m_index])
 				{
-					m_elapsedTime = Min(elapsedTime, animationLength);
-
-					return;
-				}
-
-				m_elapsedTime = SecondsF(Math::Fmod(elapsedTime.count(), animationLength.count()));
-			}
-
-			size_t currentTextureIndex() const
-			{
-				auto animationTime = m_elapsedTime;
-
-				for (size_t index = 0; index < m_durations.size(); ++index)
-				{
-					if (animationTime < m_durations[index])
+					if (!m_isLoop && m_index + 1 == m_durations.size())
 					{
-						return index;
+						m_elapsedTime = m_durations[m_index];
+
+						break;
 					}
 
-					animationTime -= m_durations[index];
+					m_elapsedTime -= m_durations[m_index];
+					m_index = (m_index + 1) % m_durations.size();
 				}
-
-				assert(m_durations.size());
-
-				return m_durations.size() - 1;
 			}
 
 		public:
@@ -105,6 +92,7 @@ namespace asc
 			/// </param>
 			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true) :
 				m_elapsedTime(0.0s),
+				m_index(0u),
 				m_durations(duration),
 				m_data(texture),
 				m_isLoop(isLoop) {}
@@ -143,9 +131,9 @@ namespace asc
 			/// </returns>
 			const TextureRegion textureRegion() const;
 
-			SecondsF elapsedTime() const
+			std::pair<size_t, SecondsF> elapsedTime() const
 			{
-				return m_elapsedTime;
+				return { m_index, m_elapsedTime };
 			}
 
 			/// <summary>
@@ -157,9 +145,12 @@ namespace asc
 			/// <returns>
 			/// なし
 			/// </returns>
-			void setElapsedTime(SecondsF time) noexcept
+			void setElapsedTime(size_t index, SecondsF elapsedTime) noexcept
 			{
-				updateElapsedTime(time);
+				m_index = index;
+				m_elapsedTime = 0.0s;
+
+				updateIndexAndElapsedTime(elapsedTime);
 			}
 
 			/// <summary>
@@ -184,7 +175,7 @@ namespace asc
 
 			void update(SecondsF deltaTime)
 			{
-				updateElapsedTime(m_elapsedTime + deltaTime);
+				updateIndexAndElapsedTime(deltaTime);
 			}
 		};
 
@@ -226,12 +217,12 @@ namespace asc
 
 		const TextureRegion Anime<Texture>::textureRegion() const
 		{
-			return m_data.uv(static_cast<double>(currentTextureIndex()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
+			return m_data.uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
 		const TextureRegion Anime<AssetName>::textureRegion() const
 		{
-			return TextureAsset(m_data).uv(static_cast<double>(currentTextureIndex()) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
+			return TextureAsset(m_data).uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 	}
 
