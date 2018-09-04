@@ -11,7 +11,7 @@ namespace asc
 		/// <summary>
 		/// パラパラ漫画のようなアニメーション
 		/// </summary>
-		template<typename TextureData>
+		template<class TextureData>
 		class Anime
 		{
 		private:
