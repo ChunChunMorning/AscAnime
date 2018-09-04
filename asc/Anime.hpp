@@ -28,6 +28,10 @@ namespace asc
 
 			void updateIndexAndElapsedTime(SecondsF deltaTime);
 
+			void updateForwardIndexAndElapsedTime(SecondsF deltaTime);
+
+			void updateReverseIndexAndElapsedTime(SecondsF deltaTime);
+
 		public:
 
 			/// <summary>
@@ -294,9 +298,17 @@ namespace asc
 		template<class TextureData>
 		void Anime<TextureData>::updateIndexAndElapsedTime(SecondsF deltaTime)
 		{
-			assert(!isEmpty());
+			deltaTime >= 0.0s ? updateForwardIndexAndElapsedTime(deltaTime) : updateReverseIndexAndElapsedTime(deltaTime);
+		}
+
+		template<class TextureData>
+		void Anime<TextureData>::updateForwardIndexAndElapsedTime(SecondsF deltaTime)
+		{
+			assert(deltaTime >= 0.0s);
 
 			m_elapsedTime += deltaTime;
+
+			assert(!isEmpty());
 
 			while (m_elapsedTime > m_durations[m_index])
 			{
@@ -309,6 +321,29 @@ namespace asc
 
 				m_elapsedTime -= m_durations[m_index];
 				m_index = (m_index + 1) % m_durations.size();
+			}
+		}
+
+		template<class TextureData>
+		void Anime<TextureData>::updateReverseIndexAndElapsedTime(SecondsF deltaTime)
+		{
+			assert(deltaTime < 0.0s);
+
+			m_elapsedTime += deltaTime;
+
+			assert(!isEmpty());
+
+			while (m_elapsedTime < 0.0s)
+			{
+				if (!m_isLoop && m_index == 0)
+				{
+					m_elapsedTime = 0.0s;
+
+					break;
+				}
+
+				m_elapsedTime += m_durations[m_index];
+				m_index = (m_durations.size() + m_index - 1) % m_durations.size();
 			}
 		}
 
