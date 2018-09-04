@@ -36,7 +36,7 @@ namespace asc
 			Anime() = default;
 
 			/// <summary>
-			/// s3d::Textureからasc::Animeを作成します。
+			/// Textureから Anime を作成します。
 			/// </summary>
 			/// <param name="texture">
 			/// テクスチャ
@@ -45,39 +45,33 @@ namespace asc
 			/// テクスチャに含まれるコマ数
 			/// </param>
 			/// <param name="duration">
-			/// 1コマの描画時間[秒]
+			/// 1コマの描画時間
 			/// </param>
 			/// <param name="isLoop">
 			/// アニメーションをループさせる場合は true
-			/// </param>
-			/// <param name="startImmediately">
-			/// 即座にアニメーションを開始する場合は true
 			/// </param>
 			Anime(const TextureData& texture, size_t size, SecondsF duration, bool isLoop = true) :
 				Anime(texture, Array<SecondsF>(size, duration), isLoop) {}
 
 			/// <summary>
-			/// s3d::Textureからasc::Animeを作成します。
+			/// Texture から Anime を作成します。
 			/// </summary>
 			/// <param name="texture">
 			/// テクスチャ
 			/// </param>
-			/// <param name="size">
-			/// テクスチャに含まれるコマ数
-			/// </param>
 			/// <param name="duration">
-			/// 各コマの描画時間[ミリ秒]
+			/// 各コマの描画時間
 			/// </param>
 			/// <param name="isLoop">
 			/// アニメーションをループさせる場合は true
 			/// </param>
-			/// <param name="startImmediately">
-			/// 即座にアニメーションを開始する場合は true
-			/// </param>
-			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true) :
+			/// <remarks>
+			/// テクスチャに含まれるコマ数と durations.size() が一致する必要があります。
+			/// </remarks>
+			Anime(const TextureData& texture, const Array<SecondsF>& durations, bool isLoop = true) :
 				m_elapsedTime(0.0s),
 				m_index(0u),
-				m_durations(duration),
+				m_durations(durations),
 				m_data(texture),
 				m_isLoop(isLoop)
 			{
@@ -85,39 +79,45 @@ namespace asc
 			}
 
 			/// <summary>
-			/// テクスチャが空ではないかを返します。
+			/// アニメーションが空ではないかを返します。
 			/// </summary>
 			/// <returns>
-			/// テクスチャが空ではない場合 true, それ以外の場合は false
+			/// アニメーションが空ではない場合 true, それ以外の場合は false
 			/// </returns>
 			explicit operator bool() const { return !isEmpty(); }
 
 			/// <summary>
-			/// 内部のテクスチャが空かどうかを示します。
+			/// アニメーションが空かどうかを示します。
 			/// </summary>
 			/// <returns>
-			/// テクスチャが空ではない場合 true, それ以外の場合は false
+			/// アニメーションが空ではない場合 true, それ以外の場合は false
 			/// </returns>
 			bool isEmpty() const;
 
 			/// <summary>
-			/// 1コマの幅（ピクセル）
+			/// 1 コマの幅（ピクセル）
 			/// </summary>
 			uint32 width() const;
 
 			/// <summary>
-			/// 1コマの高さ（ピクセル）
+			/// 1 コマの高さ（ピクセル）
 			/// </summary>
 			uint32 height() const;
 
 			/// <summary>
-			/// 描画するTextureRegionを取得します。
+			/// 描画する TextureRegion を取得します。
 			/// </summary>
 			/// <returns>
-			/// 描画するTextureRegion
+			/// 描画する TextureRegion
 			/// </returns>
 			const TextureRegion textureRegion() const;
 
+			/// <summary>
+			/// アニメーションの経過時間を取得します。
+			/// </summary>
+			/// <returns>
+			/// first -> コマ数, second -> そのコマでの経過時間
+			/// </returns>
 			std::pair<size_t, SecondsF> elapsedTime() const
 			{
 				return { m_index, m_elapsedTime };
@@ -126,26 +126,28 @@ namespace asc
 			/// <summary>
 			/// アニメーションの経過時間を変更します。
 			/// </summary>
-			/// <param name="time">
-			/// 新しく設定する経過時間[ミリ秒]
+			/// <param name="index">
+			/// 新しく設定するコマ
+			/// </param>
+			/// <param name="elapsedTime">
+			/// 新しく設定するコマでの経過時間
 			/// </param>
 			/// <returns>
-			/// なし
+			/// first -> コマ数, second -> そのコマでの経過時間
 			/// </returns>
-			void setElapsedTime(size_t index, SecondsF elapsedTime) noexcept
+			std::pair<size_t, SecondsF> setElapsedTime(size_t index, SecondsF elapsedTime) noexcept
 			{
 				m_index = index;
 				m_elapsedTime = 0.0s;
 
 				updateIndexAndElapsedTime(elapsedTime);
+
+				return { m_index, m_elapsedTime };
 			}
 
 			/// <summary>
-			/// 内部のテクスチャをリリースします。
+			/// アニメーションをリリースします。
 			/// </summary>
-			/// <remarks>
-			/// プログラムのほかの場所で同じテクスチャが使われていない場合、テクスチャのメモリを解放します。
-			/// </remarks>
 			/// <returns>
 			/// なし
 			/// </returns>
@@ -155,76 +157,127 @@ namespace asc
 				m_data.release();
 			}
 
-			void update(double seconds)
+			/// <summary>
+			/// アニメーションの時間を更新します。
+			/// </summary>
+			/// <param name="deltaTime">
+			/// 進める時間
+			/// </param>
+			/// <returns>
+			/// なし
+			/// </returns>
+			void update(double deltaTime)
 			{
-				update(SecondsF(seconds));
+				update(SecondsF(deltaTime));
 			}
 
+			/// <summary>
+			/// アニメーションの時間を更新します。
+			/// </summary>
+			/// <param name="deltaTime">
+			/// 進める時間
+			/// </param>
+			/// <returns>
+			/// なし
+			/// </returns>
 			void update(SecondsF deltaTime)
 			{
 				updateIndexAndElapsedTime(deltaTime);
 			}
 
+			/// <summary>
+			/// TextureRegion::draw
+			/// </summary>
 			template<class ...Args>
 			RectF draw(Args&&... args) const
 			{
 				return textureRegion().draw(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::drawClipped
+			/// </summary>
 			template<class ...Args>
 			RectF drawClipped(Args&&... args) const
 			{
 				return textureRegion().drawClipped(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::drawAt
+			/// </summary>
 			template<class... Args>
 			RectF drawAt(Args&&... args) const
 			{
 				return textureRegion().drawAt(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::drawAtClipped
+			/// </summary>
 			template<class... Args>
 			RectF drawAtClipped(Args&&... args) const
 			{
 				return textureRegion().drawAtClipped(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::mirrored
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TextureRegion mirrored(Args&&... args) const
 			{
 				return textureRegion().mirrored(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::flipped
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TextureRegion flipped(Args&&... args) const
 			{
 				return textureRegion().flipped(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::scaled
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TextureRegion scaled(Args&&... args) const
 			{
 				return textureRegion().scaled(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::resized
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TextureRegion resized(Args&&... args) const
 			{
 				return textureRegion().resized(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::fitted
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TextureRegion fitted(Args&&... args) const
 			{
 				return textureRegion().fitted(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::rotated
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TexturedQuad rotated(Args&&... args) const
 			{
 				return textureRegion().rotated(std::forward<Args>(args)...);
 			}
 
+			/// <summary>
+			/// TextureRegion::rotatedAt
+			/// </summary>
 			template<class... Args>
 			[[nodiscard]] TexturedQuad rotatedAt(double x, double y, double angle) const
 			{
