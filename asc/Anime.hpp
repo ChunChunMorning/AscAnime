@@ -88,7 +88,7 @@ namespace asc
 			/// <returns>
 			/// アニメーションが空ではない場合 true, それ以外の場合は false
 			/// </returns>
-			explicit operator bool() const { return !isEmpty(); }
+			[[nodiscard]] explicit operator bool() const { return !isEmpty(); }
 
 			/// <summary>
 			/// アニメーションが空かどうかを示します。
@@ -96,17 +96,17 @@ namespace asc
 			/// <returns>
 			/// アニメーションが空ではない場合 true, それ以外の場合は false
 			/// </returns>
-			bool isEmpty() const;
+			[[nodiscard]] bool isEmpty() const;
 
 			/// <summary>
 			/// 1 コマの幅（ピクセル）
 			/// </summary>
-			uint32 width() const;
+			[[nodiscard]] uint32 width() const;
 
 			/// <summary>
 			/// 1 コマの高さ（ピクセル）
 			/// </summary>
-			uint32 height() const;
+			[[nodiscard]] uint32 height() const;
 
 			/// <summary>
 			/// 描画する TextureRegion を取得します。
@@ -114,7 +114,7 @@ namespace asc
 			/// <returns>
 			/// 描画する TextureRegion
 			/// </returns>
-			const TextureRegion textureRegion() const;
+			[[nodiscard]] const TextureRegion textureRegion() const;
 
 			/// <summary>
 			/// アニメーションの経過時間を取得します。
@@ -122,7 +122,7 @@ namespace asc
 			/// <returns>
 			/// first -> コマ数, second -> そのコマでの経過時間
 			/// </returns>
-			std::pair<size_t, SecondsF> elapsedTime() const
+			[[nodiscard]] std::pair<size_t, SecondsF> elapsedTime() const
 			{
 				return { m_index, m_elapsedTime };
 			}
