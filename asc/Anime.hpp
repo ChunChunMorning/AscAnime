@@ -26,25 +26,7 @@ namespace asc
 
 			bool m_isLoop;
 
-			void updateIndexAndElapsedTime(SecondsF deltaTime)
-			{
-				assert(!isEmpty());
-
-				m_elapsedTime += deltaTime;
-
-				while (m_elapsedTime > m_durations[m_index])
-				{
-					if (!m_isLoop && m_index + 1 == m_durations.size())
-					{
-						m_elapsedTime = m_durations[m_index];
-
-						break;
-					}
-
-					m_elapsedTime -= m_durations[m_index];
-					m_index = (m_index + 1) % m_durations.size();
-				}
-			}
+			void updateIndexAndElapsedTime(SecondsF deltaTime);
 
 		public:
 
@@ -249,6 +231,33 @@ namespace asc
 				return TextureRegion().rotatedAt(std::forward<Args>(args)...);
 			}
 		};
+
+		//////////////////////////////////////////////////
+		//
+		//	Template Implementation
+		//
+		//////////////////////////////////////////////////
+
+		template<class TextureData>
+		void Anime<TextureData>::updateIndexAndElapsedTime(SecondsF deltaTime)
+		{
+			assert(!isEmpty());
+
+			m_elapsedTime += deltaTime;
+
+			while (m_elapsedTime > m_durations[m_index])
+			{
+				if (!m_isLoop && m_index + 1 == m_durations.size())
+				{
+					m_elapsedTime = m_durations[m_index];
+
+					break;
+				}
+
+				m_elapsedTime -= m_durations[m_index];
+				m_index = (m_index + 1) % m_durations.size();
+			}
+		}
 
 		//////////////////////////////////////////////////
 		//
