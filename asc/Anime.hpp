@@ -104,8 +104,9 @@ namespace asc
 			/// 即座にアニメーションを開始する場合は true
 			/// </param>
 			Anime(const TextureData& texture, const Array<SecondsF>& duration, bool isLoop = true) :
-				m_data(texture),
+				m_elapsedTime(0.0s),
 				m_durations(duration),
+				m_data(texture),
 				m_isLoop(isLoop) {}
 
 			/// <summary>
