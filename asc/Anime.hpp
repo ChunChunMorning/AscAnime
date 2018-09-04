@@ -88,7 +88,10 @@ namespace asc
 			/// <returns>
 			/// アニメーションが空ではない場合 true, それ以外の場合は false
 			/// </returns>
-			[[nodiscard]] explicit operator bool() const { return !isEmpty(); }
+			[[nodiscard]] explicit operator bool() const
+			{
+				return !isEmpty();
+			}
 
 			/// <summary>
 			/// アニメーションが空かどうかを示します。
