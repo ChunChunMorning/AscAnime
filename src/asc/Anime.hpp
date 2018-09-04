@@ -356,41 +356,49 @@ namespace asc
 		//
 		//////////////////////////////////////////////////
 
+		template<>
 		uint32 Anime<Texture>::width() const
 		{
 			return m_data.width() / static_cast<uint32>(m_durations.size());
 		}
 
+		template<>
 		uint32 Anime<AssetName>::width() const
 		{
 			return TextureAsset(m_data).width() / static_cast<uint32>(m_durations.size());
 		}
 
+		template<>
 		uint32 Anime<Texture>::height() const
 		{
 			return m_data.height();
 		}
 
+		template<>
 		uint32 Anime<AssetName>::height() const
 		{
 			return TextureAsset(m_data).height();
 		}
 
+		template<>
 		bool Anime<Texture>::isEmpty() const
 		{
 			return  m_durations.isEmpty() || m_data.isEmpty();
 		}
 
+		template<>
 		bool Anime<AssetName>::isEmpty() const
 		{
 			return !TextureAsset::IsRegistered(m_data) || TextureAsset(m_data).isEmpty();
 		}
 
+		template<>
 		const TextureRegion Anime<Texture>::textureRegion() const
 		{
 			return m_data.uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
 		}
 
+		template<>
 		const TextureRegion Anime<AssetName>::textureRegion() const
 		{
 			return TextureAsset(m_data).uv(static_cast<double>(m_index) / m_durations.size(), 0.0, 1.0 / m_durations.size(), 1.0);
