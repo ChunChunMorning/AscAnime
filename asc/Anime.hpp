@@ -286,7 +286,7 @@ namespace asc
 			/// TextureRegion::rotatedAt
 			/// </summary>
 			template<class... Args>
-			[[nodiscard]] TexturedQuad rotatedAt(double x, double y, double angle) const
+			[[nodiscard]] TexturedQuad rotatedAt(Args&&... args) const
 			{
 				return TextureRegion().rotatedAt(std::forward<Args>(args)...);
 			}
