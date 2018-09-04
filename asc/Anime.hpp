@@ -28,6 +28,8 @@ namespace asc
 
 			void updateIndexAndElapsedTime(SecondsF deltaTime)
 			{
+				assert(!isEmpty());
+
 				m_elapsedTime += deltaTime;
 
 				while (m_elapsedTime > m_durations[m_index])
@@ -95,7 +97,10 @@ namespace asc
 				m_index(0u),
 				m_durations(duration),
 				m_data(texture),
-				m_isLoop(isLoop) {}
+				m_isLoop(isLoop)
+			{
+				assert(m_durations.all([](SecondsF e) { return e > 0.0s; }));
+			}
 
 			/// <summary>
 			/// テクスチャが空ではないかを返します。
